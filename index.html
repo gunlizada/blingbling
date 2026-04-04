@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bling Bling Baku — Luxury Accessories</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="header" id="header">
+    <div class="header-top">
+      <span class="header-tagline">✦ Free delivery in Baku over 50 AZN ✦</span>
+    </div>
+    <nav class="navbar">
+      <a href="index.html" class="logo">
+        <span class="logo-bling">Bling Bling</span>
+        <span class="logo-baku">Baku</span>
+      </a>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="index.html" class="active">Home</a></li>
+        <li><a href="shop/shop.html">Shop</a></li>
+        <li><a href="index.html#new-arrivals">New Arrivals</a></li>
+        <li><a href="index.html#about">About</a></li>
+        <li><a href="index.html#contact">Contact</a></li>
+      </ul>
+      <div class="nav-actions">
+        <button class="icon-btn" onclick="toggleSearch()"><i class="fas fa-search"></i></button>
+        <button class="icon-btn cart-btn" onclick="toggleCart()">
+          <i class="fas fa-shopping-bag"></i>
+          <span class="cart-count" id="cartCount">0</span>
+        </button>
+        <button class="icon-btn menu-toggle" id="menuToggle" onclick="toggleMenu()"><i class="fas fa-bars"></i></button>
+      </div>
+    </nav>
+    <!-- Search bar -->
+    <div class="search-bar" id="searchBar">
+      <input type="text" placeholder="Search for jewelry, bags, accessories…" id="searchInput" oninput="searchProducts()" />
+      <button onclick="toggleSearch()"><i class="fas fa-times"></i></button>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-content">
+      <p class="hero-sub">New Collection 2025</p>
+      <h1 class="hero-title">Be Your Own<br /><em>Kind of</em> Glam</h1>
+      <p class="hero-desc">Handpicked luxury accessories delivered to your door in Baku</p>
+      <div class="hero-btns">
+        <a href="shop/shop.html" class="btn btn-primary">Shop Now</a>
+        <a href="index.html#new-arrivals" class="btn btn-outline">New Arrivals</a>
+      </div>
+    </div>
+    <div class="hero-decoration">
+      <div class="hero-circle c1"></div>
+      <div class="hero-circle c2"></div>
+      <div class="hero-circle c3"></div>
+    </div>
+  </section>
+
+  <!-- CATEGORIES -->
+  <section class="categories">
+    <div class="container">
+      <div class="section-header">
+        <h2>Shop by Category</h2>
+        <p>Find your perfect accessory</p>
+      </div>
+      <div class="cat-grid" id="catGrid">
+        <!-- filled by JS -->
+      </div>
+    </div>
+  </section>
+
+  <!-- NEW ARRIVALS -->
+  <section class="products-section" id="new-arrivals">
+    <div class="container">
+      <div class="section-header">
+        <h2>New Arrivals</h2>
+        <p>Fresh pieces, just landed ✦</p>
+      </div>
+      <div class="filter-bar">
+        <button class="filter-btn active" onclick="filterProducts('all', this)">All</button>
+        <button class="filter-btn" onclick="filterProducts('necklaces', this)">Necklaces</button>
+        <button class="filter-btn" onclick="filterProducts('rings', this)">Rings</button>
+        <button class="filter-btn" onclick="filterProducts('earrings', this)">Earrings</button>
+        <button class="filter-btn" onclick="filterProducts('bracelets', this)">Bracelets</button>
+        <button class="filter-btn" onclick="filterProducts('bags', this)">Bags</button>
+        <button class="filter-btn" onclick="filterProducts('accessories', this)">Accessories</button>
+      </div>
+      <div class="products-grid" id="productsGrid">
+        <!-- filled by JS -->
+      </div>
+      <div class="center-btn">
+        <a href="shop/shop.html" class="btn btn-primary">View All Products</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- BANNER -->
+  <section class="promo-banner">
+    <div class="promo-content">
+      <p class="promo-tag">Limited Time</p>
+      <h2>Complimentary Gift Wrapping<br />on All Orders ✦</h2>
+      <a href="shop/shop.html" class="btn btn-white">Shop the Collection</a>
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section class="about-section" id="about">
+    <div class="container about-grid">
+      <div class="about-visual">
+        <div class="about-img-frame">
+          <div class="about-img-placeholder">
+            <i class="fas fa-gem"></i>
+          </div>
+          <div class="about-badge">✦ Baku's Finest ✦</div>
+        </div>
+      </div>
+      <div class="about-text">
+        <p class="section-eyebrow">Our Story</p>
+        <h2>Where Every Piece<br />Tells a Story</h2>
+        <p>Bling Bling Baku was born from a love for beautiful things. We curate the finest jewelry and accessories so every woman in Azerbaijan can shine every day.</p>
+        <p>From delicate gold-plated necklaces to statement earrings — each piece is handpicked for quality, style, and that special sparkle.</p>
+        <a href="shop/shop.html" class="btn btn-primary">Explore Collection</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- INSTAGRAM STRIP -->
+  <section class="insta-strip">
+    <div class="container">
+      <p class="insta-label">Follow us <a href="https://www.instagram.com/blingblingbaku/" target="_blank">@blingblingbaku</a></p>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section class="contact-section" id="contact">
+    <div class="container contact-grid">
+      <div class="contact-info">
+        <p class="section-eyebrow">Get in Touch</p>
+        <h2>We'd Love to Hear From You</h2>
+        <div class="contact-items">
+          <a href="https://wa.me/994702003335" target="_blank" class="contact-item whatsapp">
+            <div class="contact-icon"><i class="fab fa-whatsapp"></i></div>
+            <div>
+              <strong>WhatsApp</strong>
+              <span>+994 70 200 33 35</span>
+            </div>
+          </a>
+          <a href="https://www.instagram.com/blingblingbaku/" target="_blank" class="contact-item instagram">
+            <div class="contact-icon"><i class="fab fa-instagram"></i></div>
+            <div>
+              <strong>Instagram</strong>
+              <span>@blingblingbaku</span>
+            </div>
+          </a>
+          <div class="contact-item">
+            <div class="contact-icon"><i class="fas fa-map-marker-alt"></i></div>
+            <div>
+              <strong>Location</strong>
+              <span>Baku, Azerbaijan</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="order-form-box">
+        <h3>Send an Order Inquiry</h3>
+        <form class="order-form" onsubmit="submitInquiry(event)">
+          <input type="text" placeholder="Your Name" required />
+          <input type="tel" placeholder="Phone / WhatsApp Number" required />
+          <textarea placeholder="Tell us what you're looking for…" rows="4"></textarea>
+          <button type="submit" class="btn btn-primary full-width">Send via WhatsApp</button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container footer-grid">
+      <div class="footer-brand">
+        <div class="logo">
+          <span class="logo-bling">Bling Bling</span>
+          <span class="logo-baku">Baku</span>
+        </div>
+        <p>Luxury accessories for every occasion. Delivered with love in Baku.</p>
+        <div class="social-links">
+          <a href="https://www.instagram.com/blingblingbaku/" target="_blank"><i class="fab fa-instagram"></i></a>
+          <a href="https://wa.me/994702003335" target="_blank"><i class="fab fa-whatsapp"></i></a>
+        </div>
+      </div>
+      <div class="footer-links">
+        <h4>Shop</h4>
+        <ul>
+          <li><a href="shop/shop.html">All Products</a></li>
+          <li><a href="shop.html?cat=necklaces">Necklaces</a></li>
+          <li><a href="shop.html?cat=rings">Rings</a></li>
+          <li><a href="shop.html?cat=earrings">Earrings</a></li>
+          <li><a href="shop.html?cat=bags">Bags</a></li>
+        </ul>
+      </div>
+      <div class="footer-links">
+        <h4>Info</h4>
+        <ul>
+          <li><a href="index.html#about">About Us</a></li>
+          <li><a href="index.html#contact">Contact</a></li>
+          <li><a href="#">Shipping Info</a></li>
+          <li><a href="#">Returns</a></li>
+        </ul>
+      </div>
+      <div class="footer-contact">
+        <h4>Contact</h4>
+        <a href="https://wa.me/994702003335" target="_blank" class="footer-wa">
+          <i class="fab fa-whatsapp"></i> +994 70 200 33 35
+        </a>
+        <a href="https://www.instagram.com/blingblingbaku/" target="_blank">
+          <i class="fab fa-instagram"></i> @blingblingbaku
+        </a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2025 Bling Bling Baku. All rights reserved.</p>
+      <a href="admin/index.html" class="admin-link">Admin</a>
+    </div>
+  </footer>
+
+  <!-- CART DRAWER -->
+  <div class="cart-overlay" id="cartOverlay" onclick="toggleCart()"></div>
+  <div class="cart-drawer" id="cartDrawer">
+    <div class="cart-header">
+      <h3>Your Bag</h3>
+      <button onclick="toggleCart()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="cart-items" id="cartItems"></div>
+    <div class="cart-footer">
+      <div class="cart-total">
+        <span>Total</span>
+        <span id="cartTotal">0 AZN</span>
+      </div>
+      <button class="btn btn-primary full-width" onclick="checkoutWhatsApp()">
+        <i class="fab fa-whatsapp"></i> Order via WhatsApp
+      </button>
+    </div>
+  </div>
+
+  <!-- PRODUCT MODAL -->
+  <div class="modal-overlay" id="modalOverlay" onclick="closeModal()"></div>
+  <div class="product-modal" id="productModal">
+    <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+
+  <!-- FLOATING WHATSAPP -->
+  <a href="https://wa.me/994702003335" target="_blank" class="float-wa">
+    <i class="fab fa-whatsapp"></i>
+  </a>
+
+  <script src="js/products.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shop — Bling Bling Baku</title>
+  <link rel="stylesheet" href="../css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+</head>
+<body>
+
+  <header class="header" id="header">
+    <div class="header-top">
+      <span class="header-tagline">✦ Free delivery in Baku over 50 AZN ✦</span>
+    </div>
+    <nav class="navbar">
+      <a href="../index.html" class="logo">
+        <span class="logo-bling">Bling Bling</span>
+        <span class="logo-baku">Baku</span>
+      </a>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="../index.html">Home</a></li>
+        <li><a href="shop.html" class="active">Shop</a></li>
+        <li><a href="../index.html#new-arrivals">New Arrivals</a></li>
+        <li><a href="../index.html#about">About</a></li>
+        <li><a href="../index.html#contact">Contact</a></li>
+      </ul>
+      <div class="nav-actions">
+        <button class="icon-btn" onclick="toggleSearch()"><i class="fas fa-search"></i></button>
+        <button class="icon-btn cart-btn" onclick="toggleCart()">
+          <i class="fas fa-shopping-bag"></i>
+          <span class="cart-count" id="cartCount">0</span>
+        </button>
+        <button class="icon-btn menu-toggle" id="menuToggle" onclick="toggleMenu()"><i class="fas fa-bars"></i></button>
+      </div>
+    </nav>
+    <div class="search-bar" id="searchBar">
+      <input type="text" placeholder="Search for jewelry, bags, accessories…" id="searchInput" oninput="searchProducts()" />
+      <button onclick="toggleSearch()"><i class="fas fa-times"></i></button>
+    </div>
+  </header>
+
+  <div class="page-hero small">
+    <h1>Shop All</h1>
+    <p>Discover our full collection</p>
+  </div>
+
+  <section class="shop-section">
+    <div class="container shop-layout">
+      <!-- Sidebar -->
+      <aside class="shop-sidebar">
+        <div class="sidebar-block">
+          <h4>Categories</h4>
+          <ul class="sidebar-cats" id="sidebarCats">
+            <li><a href="#" class="active" onclick="sidebarFilter('all',this)">All Products</a></li>
+            <li><a href="#" onclick="sidebarFilter('necklaces',this)">Necklaces</a></li>
+            <li><a href="#" onclick="sidebarFilter('rings',this)">Rings</a></li>
+            <li><a href="#" onclick="sidebarFilter('earrings',this)">Earrings</a></li>
+            <li><a href="#" onclick="sidebarFilter('bracelets',this)">Bracelets</a></li>
+            <li><a href="#" onclick="sidebarFilter('bags',this)">Bags</a></li>
+            <li><a href="#" onclick="sidebarFilter('accessories',this)">Accessories</a></li>
+          </ul>
+        </div>
+        <div class="sidebar-block">
+          <h4>Price Range</h4>
+          <div class="price-range">
+            <input type="range" id="priceRange" min="0" max="500" value="500" oninput="filterByPrice(this.value)" />
+            <span>Up to <strong id="priceVal">500</strong> AZN</span>
+          </div>
+        </div>
+        <div class="sidebar-block">
+          <h4>Sort By</h4>
+          <select onchange="sortProducts(this.value)" class="sort-select">
+            <option value="newest">Newest First</option>
+            <option value="price-asc">Price: Low to High</option>
+            <option value="price-desc">Price: High to Low</option>
+            <option value="name">Name A–Z</option>
+          </select>
+        </div>
+      </aside>
+
+      <!-- Products -->
+      <div class="shop-main">
+        <div class="shop-toolbar">
+          <span id="productCount"></span>
+          <div class="view-toggle">
+            <button onclick="setView('grid')" id="gridViewBtn" class="active"><i class="fas fa-th"></i></button>
+            <button onclick="setView('list')" id="listViewBtn"><i class="fas fa-list"></i></button>
+          </div>
+        </div>
+        <div class="products-grid" id="shopGrid"></div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container footer-grid">
+      <div class="footer-brand">
+        <div class="logo">
+          <span class="logo-bling">Bling Bling</span>
+          <span class="logo-baku">Baku</span>
+        </div>
+        <p>Luxury accessories for every occasion.</p>
+        <div class="social-links">
+          <a href="https://www.instagram.com/blingblingbaku/" target="_blank"><i class="fab fa-instagram"></i></a>
+          <a href="https://wa.me/994702003335" target="_blank"><i class="fab fa-whatsapp"></i></a>
+        </div>
+      </div>
+      <div class="footer-links">
+        <h4>Shop</h4>
+        <ul>
+          <li><a href="shop.html">All Products</a></li>
+        </ul>
+      </div>
+      <div class="footer-contact">
+        <h4>Contact</h4>
+        <a href="https://wa.me/994702003335" target="_blank" class="footer-wa">
+          <i class="fab fa-whatsapp"></i> +994 70 200 33 35
+        </a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2025 Bling Bling Baku. All rights reserved.</p>
+      <a href="../admin/index.html" class="admin-link">Admin</a>
+    </div>
+  </footer>
+
+  <div class="cart-overlay" id="cartOverlay" onclick="toggleCart()"></div>
+  <div class="cart-drawer" id="cartDrawer">
+    <div class="cart-header">
+      <h3>Your Bag</h3>
+      <button onclick="toggleCart()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="cart-items" id="cartItems"></div>
+    <div class="cart-footer">
+      <div class="cart-total">
+        <span>Total</span>
+        <span id="cartTotal">0 AZN</span>
+      </div>
+      <button class="btn btn-primary full-width" onclick="checkoutWhatsApp()">
+        <i class="fab fa-whatsapp"></i> Order via WhatsApp
+      </button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalOverlay" onclick="closeModal()"></div>
+  <div class="product-modal" id="productModal">
+    <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+
+  <a href="https://wa.me/994702003335" target="_blank" class="float-wa">
+    <i class="fab fa-whatsapp"></i>
+  </a>
+
+  <script src="../js/products.js"></script>
+  <script src="../js/main.js"></script>
+  <script>
+    // Shop-specific init
+    window.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const cat = urlParams.get('cat');
+      renderShopGrid(cat || 'all');
+      if (cat) {
+        document.querySelectorAll('.sidebar-cats a').forEach(a => {
+          a.classList.remove('active');
+          if (a.getAttribute('onclick') && a.getAttribute('onclick').includes(cat)) {
+            a.classList.add('active');
+          }
+        });
+      }
+    });
+
+    function sidebarFilter(cat, el) {
+      document.querySelectorAll('.sidebar-cats a').forEach(a => a.classList.remove('active'));
+      el.classList.add('active');
+      renderShopGrid(cat);
+    }
+
+    let currentCat = 'all', maxPrice = 500, sortMode = 'newest';
+
+    function renderShopGrid(cat) {
+      currentCat = cat || currentCat;
+      const grid = document.getElementById('shopGrid');
+      let filtered = getProducts().filter(p => {
+        const catMatch = currentCat === 'all' || p.category === currentCat;
+        const priceMatch = p.price <= maxPrice;
+        return catMatch && priceMatch && p.active !== false;
+      });
+      if (sortMode === 'price-asc') filtered.sort((a,b) => a.price - b.price);
+      else if (sortMode === 'price-desc') filtered.sort((a,b) => b.price - a.price);
+      else if (sortMode === 'name') filtered.sort((a,b) => a.name.localeCompare(b.name));
+      else filtered.sort((a,b) => b.id - a.id);
+      document.getElementById('productCount').textContent = `${filtered.length} Products`;
+      grid.innerHTML = filtered.length ? filtered.map(p => productCard(p)).join('') : '<p class="no-products">No products found.</p>';
+    }
+
+    function filterByPrice(val) {
+      maxPrice = parseInt(val);
+      document.getElementById('priceVal').textContent = val;
+      renderShopGrid();
+    }
+
+    function sortProducts(val) {
+      sortMode = val;
+      renderShopGrid();
+    }
+
+    function setView(type) {
+      const grid = document.getElementById('shopGrid');
+      grid.className = type === 'list' ? 'products-list' : 'products-grid';
+      document.getElementById('gridViewBtn').classList.toggle('active', type === 'grid');
+      document.getElementById('listViewBtn').classList.toggle('active', type === 'list');
+    }
+  </script>
+</body>
+</html>
