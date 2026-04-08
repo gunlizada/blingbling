@@ -465,13 +465,14 @@ async function doLogin() {
   loadDashboard();
   renderTable();
 }
+window.doLogin = doLogin;
 async function doLogout() {
   await supabase.auth.signOut();
 
   document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('adminApp').style.display = 'none';
 }
-
+window.doLogout = doLogout;
 // ---- NAVIGATION ----
 function showPage(page, btn) {
   document.querySelectorAll('.admin-page').forEach(p => p.classList.remove('active'));
