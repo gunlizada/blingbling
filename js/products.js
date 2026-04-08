@@ -5,7 +5,15 @@
 
 function getProducts() {
   const stored = localStorage.getItem('bbb_products');
-  if (stored) return JSON.parse(stored);
+  if (stored) {
+    // FIX: normalize id and quantity to Numbers to prevent edit/delete type mismatch bugs
+    return JSON.parse(stored).map(p => ({
+      ...p,
+      id: Number(p.id),
+      price: Number(p.price) || 0,
+      quantity: (p.quantity !== undefined && p.quantity !== null) ? Number(p.quantity) : 0
+    }));
+  }
   // Default demo products
   const defaults = [
     {

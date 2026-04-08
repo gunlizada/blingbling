@@ -475,8 +475,14 @@ function showPage(page, btn) {
 // ---- PRODUCTS ----
 function getProducts() {
   const stored = localStorage.getItem('bbb_products');
-  if (stored) return JSON.parse(stored);
-  return [];
+  if (!stored) return [];
+  // FIX: ensure all IDs and quantities are numbers, never strings or undefined
+  return JSON.parse(stored).map(p => ({
+    ...p,
+    id: Number(p.id),
+    price: Number(p.price) || 0,
+    quantity: p.quantity !== undefined && p.quantity !== null ? Number(p.quantity) : 0
+  }));
 }
 function saveProducts(products) {
   localStorage.setItem('bbb_products', JSON.stringify(products));
@@ -501,11 +507,11 @@ function loadDashboard() {
 }
 
 function renderTable() {
-  const q = (document.getElementById('tableSearch')?.value || '').toLowerCase();
+  const q = (document.getElementById('tableSearch')?.value || '').toLowerCase().trim();
   const cat = document.getElementById('catFilter')?.value || '';
   const status = document.getElementById('statusFilter')?.value || '';
   const products = getProducts().filter(p => {
-    const matchQ = !q || p.name.toLowerCase().includes(q) || p.category.includes(q);
+    const matchQ = !q || p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q);
     const matchC = !cat || p.category === cat;
     const matchS = !status || (status === 'active' ? p.active !== false : p.active === false);
     return matchQ && matchC && matchS;
@@ -513,27 +519,29 @@ function renderTable() {
 
   document.getElementById('productTableBody').innerHTML = products.map(p => {
     const isActive = p.active !== false;
-    const qtyClass = p.quantity <= 0 ? 'qty-out' : p.quantity <= 5 ? 'qty-low' : '';
+    const qty = p.quantity;
+    const qtyClass = qty <= 0 ? 'qty-out' : qty <= 5 ? 'qty-low' : '';
     const thumb = p.images && p.images.length
       ? `<div class="prod-thumb"><img src="${p.images[0]}" alt="" /></div>`
       : `<div class="prod-thumb"><i class="fas fa-gem"></i></div>`;
+    // FIX: store id as data attribute to avoid any JS type issues in onclick
     return `
     <tr>
       <td>${thumb}</td>
       <td><div class="prod-name">${p.name}</div></td>
       <td><span class="cat-badge">${p.category}</span></td>
       <td class="price-cell">${p.price} AZN${p.oldPrice ? `<br><span style="font-size:0.75rem;color:var(--text-light);text-decoration:line-through">${p.oldPrice}</span>` : ''}</td>
-      <td class="qty-cell ${qtyClass}">${p.quantity}</td>
+      <td class="qty-cell ${qtyClass}">${qty}</td>
       <td>
-        <button class="status-toggle" onclick="toggleStatus(${p.id})">
+        <button class="status-toggle" data-id="${p.id}" onclick="toggleStatus(Number(this.dataset.id))">
           <div class="toggle-dot ${isActive ? 'toggle-on' : 'toggle-off'}"></div>
           <span style="font-size:0.8rem;color:var(--text-light)">${isActive ? 'Active' : 'Hidden'}</span>
         </button>
       </td>
       <td>
         <div class="action-btns">
-          <button class="btn-edit" onclick="openForm(${p.id})" title="Edit"><i class="fas fa-pencil-alt"></i></button>
-          <button class="btn-del" onclick="deleteProduct(${p.id})" title="Delete"><i class="fas fa-trash-alt"></i></button>
+          <button class="btn-edit" data-id="${p.id}" onclick="openForm(Number(this.dataset.id))" title="Edit"><i class="fas fa-pencil-alt"></i></button>
+          <button class="btn-del" data-id="${p.id}" onclick="deleteProduct(Number(this.dataset.id))" title="Delete"><i class="fas fa-trash-alt"></i></button>
         </div>
       </td>
     </tr>`;
@@ -541,35 +549,41 @@ function renderTable() {
 }
 
 function toggleStatus(id) {
+  // FIX: use == (loose) comparison as safety net and also Number() cast
   const products = getProducts();
-  const p = products.find(x => x.id === id);
+  const p = products.find(x => Number(x.id) === Number(id));
   if (p) { p.active = p.active === false ? true : false; saveProducts(products); renderTable(); }
 }
 
 function deleteProduct(id) {
-  if (!confirm('Delete this product?')) return;
-  const products = getProducts().filter(p => p.id !== id);
+  if (!confirm('Delete this product? This cannot be undone.')) return;
+  // FIX: cast both sides to Number so "7" === 7 works
+  const products = getProducts().filter(p => Number(p.id) !== Number(id));
   saveProducts(products);
   renderTable(); loadDashboard();
   showToast('Product deleted');
 }
 
 // ---- FORM ----
-function openForm(id = null) {
-  editingId = id;
+function openForm(id) {
+  // FIX: explicitly check for null/undefined, NOT just falsy (id=0 edge case)
+  const isEdit = id !== null && id !== undefined;
+  editingId = isEdit ? Number(id) : null;
   formImages = [];
   formColors = [];
   document.getElementById('imgPreviews').innerHTML = '';
   document.getElementById('colorManager').innerHTML = '<button class="add-color-btn" onclick="addColorPicker()"><i class="fas fa-plus"></i> Add Color</button>';
 
-  if (id) {
-    const p = getProducts().find(x => x.id === id);
+  if (isEdit) {
+    // FIX: cast both sides to Number when finding
+    const p = getProducts().find(x => Number(x.id) === Number(id));
+    if (!p) { showToast('Product not found'); return; }
     document.getElementById('formTitle').textContent = 'Edit Product';
-    document.getElementById('fName').value = p.name;
-    document.getElementById('fCat').value = p.category;
-    document.getElementById('fPrice').value = p.price;
+    document.getElementById('fName').value = p.name || '';
+    document.getElementById('fCat').value = p.category || '';
+    document.getElementById('fPrice').value = p.price || '';
     document.getElementById('fOldPrice').value = p.oldPrice || '';
-    document.getElementById('fQty').value = p.quantity;
+    document.getElementById('fQty').value = p.quantity !== undefined ? p.quantity : '';
     document.getElementById('fBadge').value = p.badge || '';
     document.getElementById('fDesc').value = p.description || '';
     formImages = p.images ? [...p.images] : [];
@@ -578,7 +592,7 @@ function openForm(id = null) {
     renderColorChips();
   } else {
     document.getElementById('formTitle').textContent = 'Add New Product';
-    ['fName','fPrice','fOldPrice','fQty','fDesc'].forEach(id => document.getElementById(id).value = '');
+    ['fName','fPrice','fOldPrice','fQty','fDesc'].forEach(fid => document.getElementById(fid).value = '');
     document.getElementById('fCat').value = '';
     document.getElementById('fBadge').value = '';
   }
@@ -599,23 +613,33 @@ function saveProduct() {
   const badge = document.getElementById('fBadge').value;
   const desc = document.getElementById('fDesc').value.trim();
 
-  if (!name || !cat || isNaN(price) || isNaN(qty)) {
-    showToast('Please fill all required fields'); return;
-  }
+  if (!name) { showToast('Please enter a product name'); return; }
+  if (!cat) { showToast('Please select a category'); return; }
+  if (isNaN(price) || price < 0) { showToast('Please enter a valid price'); return; }
+  if (isNaN(qty) || qty < 0) { showToast('Please enter a valid quantity'); return; }
 
   const products = getProducts();
-  if (editingId) {
-    const idx = products.findIndex(p => p.id === editingId);
+
+  if (editingId !== null) {
+    // FIX: cast both to Number for reliable match
+    const idx = products.findIndex(p => Number(p.id) === Number(editingId));
     if (idx > -1) {
       products[idx] = { ...products[idx], name, category: cat, price, oldPrice, quantity: qty, badge: badge || null, description: desc, images: formImages, colors: formColors };
+      saveProducts(products);
+      closeForm(); renderTable(); loadDashboard();
+      showToast('Product updated ✦');
+    } else {
+      showToast('Error: product not found');
     }
   } else {
-    const newId = Math.max(0, ...products.map(p => p.id)) + 1;
+    // FIX: generate new ID as max+1, always a Number
+    const allIds = products.map(p => Number(p.id)).filter(n => !isNaN(n));
+    const newId = allIds.length > 0 ? Math.max(...allIds) + 1 : 1;
     products.push({ id: newId, name, category: cat, price, oldPrice, quantity: qty, badge: badge || null, description: desc, images: formImages, colors: formColors, active: true });
+    saveProducts(products);
+    closeForm(); renderTable(); loadDashboard();
+    showToast('Product added ✦');
   }
-  saveProducts(products);
-  closeForm(); renderTable(); loadDashboard();
-  showToast(editingId ? 'Product updated ✦' : 'Product added ✦');
 }
 
 // ---- IMAGE UPLOAD ----

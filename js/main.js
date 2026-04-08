@@ -54,15 +54,28 @@ function toggleSearch() {
 }
 
 function searchProducts() {
-  const q = document.getElementById('searchInput').value.toLowerCase();
-  if (!q) return;
-  const results = getProducts().filter(p => p.active !== false && (
-    p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q)
-  ));
+  const q = document.getElementById('searchInput').value.toLowerCase().trim();
   const grid = document.getElementById('productsGrid') || document.getElementById('shopGrid');
-  if (grid) grid.innerHTML = results.length
+  if (!grid) return;
+
+  if (!q) {
+    // Empty search — restore normal view
+    renderHomeProducts();
+    return;
+  }
+
+  const results = getProducts().filter(p => p.active !== false && (
+    p.name.toLowerCase().includes(q) ||
+    p.category.toLowerCase().includes(q) ||
+    (p.description && p.description.toLowerCase().includes(q))
+  ));
+
+  grid.innerHTML = results.length
     ? results.map(p => productCard(p)).join('')
-    : '<p class="no-products">No results found.</p>';
+    : `<div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--text-light)">
+        <i class="fas fa-search" style="font-size:2rem;display:block;margin-bottom:14px;color:var(--pink-light)"></i>
+        <p>No products found for <strong style="color:var(--text-mid)">"${q}"</strong></p>
+       </div>`;
 }
 
 // ---- PRODUCT MODAL ----
