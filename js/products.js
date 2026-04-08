@@ -4,16 +4,34 @@
 // ============================================================
 
 function getProducts() {
-  const stored = localStorage.getItem('bbb_products');
-  if (stored) {
-    // FIX: normalize id and quantity to Numbers to prevent edit/delete type mismatch bugs
-    return JSON.parse(stored).map(p => ({
-      ...p,
-      id: Number(p.id),
-      price: Number(p.price) || 0,
-      quantity: (p.quantity !== undefined && p.quantity !== null) ? Number(p.quantity) : 0
-    }));
+  import { supabase } from './supabase.js'
+
+export async function getProducts() {
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .eq('active', true)
+    .order('id', { ascending: true })
+
+  if (error) {
+    console.error(error)
+    return []
   }
+
+  return data.map(p => ({
+    id: Number(p.id),
+    name: p.name,
+    category: p.category,
+    price: Number(p.price) || 0,
+    oldPrice: p.old_price ? Number(p.old_price) : null,
+    description: p.description || '',
+    images: p.image_urls || [],
+    colors: p.colors || [],
+    quantity: Number(p.quantity) || 0,
+    badge: p.badge || null,
+    active: !!p.active
+  }))
+}
   // Default demo products
   const defaults = [
     {

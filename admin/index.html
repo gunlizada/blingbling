@@ -276,7 +276,7 @@
   <div class="login-box">
     <div class="login-logo">Bling Bling Baku</div>
     <div class="login-sub">Admin Panel</div>
-    <input type="text" id="loginUser" placeholder="Username" />
+    <input type="email" id="loginUser" placeholder="Email" />
     <input type="password" id="loginPass" placeholder="Password" onkeypress="if(event.key==='Enter')doLogin()" />
     <button class="btn-login" onclick="doLogin()">Sign In</button>
     <p class="login-error" id="loginError">Incorrect username or password</p>
@@ -433,7 +433,8 @@
 
 <div class="toast" id="toast"></div>
 
-<script>
+<script type="module">
+import { supabase } from '../js/supabase.js'
 // ============================================================
 // ADMIN LOGIC
 // ============================================================
@@ -443,23 +444,32 @@ let formImages = [];
 let formColors = [];
 
 // ---- AUTH ----
-function doLogin() {
-  const u = document.getElementById('loginUser').value;
-  const p = document.getElementById('loginPass').value;
-  if (u === ADMIN_PASS.user && p === ADMIN_PASS.pass) {
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('adminApp').style.display = 'block';
-    loadDashboard();
-    renderTable();
-  } else {
+async function doLogin() {
+  const email = document.getElementById('loginUser').value;
+  const password = document.getElementById('loginPass').value;
+
+  const { error } = await supabase.auth.signInWithPassword({
+    email,
+    password
+  })
+
+  if (error) {
+    document.getElementById('loginError').textContent = error.message;
     document.getElementById('loginError').style.display = 'block';
+    return;
   }
+
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('adminApp').style.display = 'block';
+
+  loadDashboard();
+  renderTable();
 }
-function doLogout() {
+async function doLogout() {
+  await supabase.auth.signOut();
+
   document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('adminApp').style.display = 'none';
-  document.getElementById('loginUser').value = '';
-  document.getElementById('loginPass').value = '';
 }
 
 // ---- NAVIGATION ----
@@ -473,23 +483,35 @@ function showPage(page, btn) {
 }
 
 // ---- PRODUCTS ----
-function getProducts() {
-  const stored = localStorage.getItem('bbb_products');
-  if (!stored) return [];
-  // FIX: ensure all IDs and quantities are numbers, never strings or undefined
-  return JSON.parse(stored).map(p => ({
-    ...p,
+
+async function getProducts() {
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .order('id', { ascending: true })
+
+  if (error) {
+    console.error(error)
+    return []
+  }
+
+  return data.map(p => ({
     id: Number(p.id),
+    name: p.name,
+    category: p.category,
     price: Number(p.price) || 0,
-    quantity: p.quantity !== undefined && p.quantity !== null ? Number(p.quantity) : 0
-  }));
-}
-function saveProducts(products) {
-  localStorage.setItem('bbb_products', JSON.stringify(products));
+    oldPrice: p.old_price,
+    quantity: Number(p.quantity) || 0,
+    description: p.description || '',
+    images: p.image_urls || [],
+    colors: p.colors || [],
+    badge: p.badge || null,
+    active: p.active !== false
+  }))
 }
 
-function loadDashboard() {
-  const products = getProducts();
+async function loadDashboard() {
+  const products = await getProducts();
   const active = products.filter(p => p.active !== false).length;
   const outOfStock = products.filter(p => p.quantity <= 0).length;
   const totalVal = products.reduce((s, p) => s + p.price * (p.quantity || 0), 0);
@@ -506,11 +528,11 @@ function loadDashboard() {
     : '<p style="color:var(--text-light);font-size:0.88rem">All products are well stocked ✦</p>';
 }
 
-function renderTable() {
+async function renderTable() {
   const q = (document.getElementById('tableSearch')?.value || '').toLowerCase().trim();
   const cat = document.getElementById('catFilter')?.value || '';
   const status = document.getElementById('statusFilter')?.value || '';
-  const products = getProducts().filter(p => {
+  const products = await getProducts().filter(p => {
     const matchQ = !q || p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q);
     const matchC = !cat || p.category === cat;
     const matchS = !status || (status === 'active' ? p.active !== false : p.active === false);
@@ -565,7 +587,7 @@ function deleteProduct(id) {
 }
 
 // ---- FORM ----
-function openForm(id) {
+async function openForm(id) {
   // FIX: explicitly check for null/undefined, NOT just falsy (id=0 edge case)
   const isEdit = id !== null && id !== undefined;
   editingId = isEdit ? Number(id) : null;
@@ -604,7 +626,7 @@ function closeForm() {
   editingId = null;
 }
 
-function saveProduct() {
+async function saveProduct() {
   const name = document.getElementById('fName').value.trim();
   const cat = document.getElementById('fCat').value;
   const price = parseFloat(document.getElementById('fPrice').value);
@@ -618,28 +640,46 @@ function saveProduct() {
   if (isNaN(price) || price < 0) { showToast('Please enter a valid price'); return; }
   if (isNaN(qty) || qty < 0) { showToast('Please enter a valid quantity'); return; }
 
-  const products = getProducts();
+ if (editingId !== null) {
+  await supabase
+    .from('products')
+    .update({
+      name,
+      category: cat,
+      price,
+      old_price: oldPrice,
+      quantity: qty,
+      badge,
+      description: desc,
+      image_urls: formImages,
+      colors: formColors
+    })
+    .eq('id', editingId)
 
-  if (editingId !== null) {
-    // FIX: cast both to Number for reliable match
-    const idx = products.findIndex(p => Number(p.id) === Number(editingId));
-    if (idx > -1) {
-      products[idx] = { ...products[idx], name, category: cat, price, oldPrice, quantity: qty, badge: badge || null, description: desc, images: formImages, colors: formColors };
-      saveProducts(products);
-      closeForm(); renderTable(); loadDashboard();
-      showToast('Product updated ✦');
-    } else {
-      showToast('Error: product not found');
-    }
-  } else {
-    // FIX: generate new ID as max+1, always a Number
-    const allIds = products.map(p => Number(p.id)).filter(n => !isNaN(n));
-    const newId = allIds.length > 0 ? Math.max(...allIds) + 1 : 1;
-    products.push({ id: newId, name, category: cat, price, oldPrice, quantity: qty, badge: badge || null, description: desc, images: formImages, colors: formColors, active: true });
-    saveProducts(products);
-    closeForm(); renderTable(); loadDashboard();
-    showToast('Product added ✦');
-  }
+  showToast('Product updated ✦')
+
+} else {
+  await supabase
+    .from('products')
+    .insert({
+      name,
+      category: cat,
+      price,
+      old_price: oldPrice,
+      quantity: qty,
+      badge,
+      description: desc,
+      image_urls: formImages,
+      colors: formColors,
+      active: true
+    })
+
+  showToast('Product added ✦')
+}
+
+closeForm()
+renderTable()
+loadDashboard()
 }
 
 // ---- IMAGE UPLOAD ----
