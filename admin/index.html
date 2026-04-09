@@ -145,6 +145,7 @@
   <div class="login-box">
     <div class="login-logo">Bling Bling Baku</div>
     <div class="login-sub">Admin Panel</div>
+    <div id="dbStatus" style="margin-bottom:14px;padding:8px 14px;border-radius:20px;font-size:0.78rem;background:#f5f5f5;color:#999;text-align:center;">⏳ Connecting to database…</div>
     <input type="text" id="loginUser" placeholder="Username" />
     <input type="password" id="loginPass" placeholder="Password" onkeypress="if(event.key==='Enter')doLogin()" />
     <button class="btn-login" onclick="doLogin()">Sign In</button>
@@ -310,9 +311,38 @@ const WA_NUMBER = '994702003335';
 
 let supabase;
 function initSupabase() {
+  const statusEl = document.getElementById('dbStatus');
   if (typeof window.supabase !== 'undefined') {
-    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    try {
+      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      // Test connection with a lightweight query
+      supabase.from('products').select('id', { count: 'exact', head: true })
+        .then(({ error }) => {
+          if (statusEl) {
+            if (error) {
+              statusEl.style.background = '#fff0f0';
+              statusEl.style.color = '#c0392b';
+              statusEl.textContent = '❌ DB error: ' + error.message;
+            } else {
+              statusEl.style.background = '#f0fff4';
+              statusEl.style.color = '#27ae60';
+              statusEl.textContent = '✅ Database connected';
+            }
+          }
+        });
+    } catch(e) {
+      if (statusEl) {
+        statusEl.style.background = '#fff0f0';
+        statusEl.style.color = '#c0392b';
+        statusEl.textContent = '❌ Init error: ' + e.message;
+      }
+    }
   } else {
+    if (statusEl) {
+      statusEl.style.background = '#fff0f0';
+      statusEl.style.color = '#c0392b';
+      statusEl.textContent = '❌ Supabase library not loaded (check internet connection)';
+    }
     console.error('Supabase JS not loaded. Check CDN script tag.');
   }
 }
@@ -373,6 +403,7 @@ function showPage(page, btn) {
 
 // ---- DASHBOARD ----
 async function loadDashboard() {
+  if (!supabase) return;
   const { data: products } = await supabase.from('products').select('*');
   if (!products) return;
 
@@ -394,6 +425,7 @@ async function loadDashboard() {
 
 // ---- LOAD PRODUCTS TABLE ----
 async function loadProductsPage() {
+  if (!supabase) return;
   const { data, error } = await supabase.from('products').select('*').order('created_at', { ascending: false });
   if (error) { showToast('Failed to load products: ' + error.message, 'error'); return; }
   allProducts = data || [];
@@ -534,6 +566,17 @@ async function saveProduct() {
   saveBtn.disabled = true;
   saveBtn.innerHTML = '<div class="spinner-sm"></div> Saving…';
 
+  // Guard: make sure Supabase client is ready
+  if (!supabase) {
+    try { initSupabase(); } catch(e) {}
+  }
+  if (!supabase) {
+    saveBtn.disabled = false;
+    saveBtn.innerHTML = '<i class="fas fa-check"></i> Save Product';
+    showToast('Database not connected. Refresh the page and try again.', 'error');
+    return;
+  }
+
   const productData = {
     name, category, price, old_price, quantity, badge, description,
     images: formImages,
@@ -541,25 +584,30 @@ async function saveProduct() {
     active: true
   };
 
-  let result;
-  if (editingId) {
-    result = await supabase.from('products').update(productData).eq('id', editingId).select().single();
-  } else {
-    result = await supabase.from('products').insert([productData]).select().single();
+  try {
+    let result;
+    if (editingId) {
+      result = await supabase.from('products').update(productData).eq('id', editingId).select().single();
+    } else {
+      result = await supabase.from('products').insert([productData]).select().single();
+    }
+
+    if (result.error) {
+      showToast('Save failed: ' + result.error.message, 'error');
+      return;
+    }
+
+    closeForm();
+    await loadProductsPage();
+    loadDashboard();
+    showToast(editingId ? 'Product updated ✦' : 'Product added ✦', 'success');
+  } catch (err) {
+    showToast('Unexpected error: ' + err.message, 'error');
+    console.error('saveProduct error:', err);
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.innerHTML = '<i class="fas fa-check"></i> Save Product';
   }
-
-  saveBtn.disabled = false;
-  saveBtn.innerHTML = '<i class="fas fa-check"></i> Save Product';
-
-  if (result.error) {
-    showToast('Save failed: ' + result.error.message, 'error');
-    return;
-  }
-
-  closeForm();
-  await loadProductsPage();
-  loadDashboard();
-  showToast(editingId ? 'Product updated ✦' : 'Product added ✦', 'success');
 }
 
 // ---- IMAGE UPLOAD to Supabase Storage ----
@@ -570,22 +618,33 @@ async function handleImgUpload(input) {
   const progressEl = document.getElementById('uploadProgress');
   progressEl.innerHTML = `<div class="img-uploading"><div class="spinner-sm"></div> Uploading ${files.length} photo${files.length>1?'s':''}…</div>`;
 
+  if (!supabase) {
+    progressEl.innerHTML = '';
+    showToast('Database not connected. Refresh the page.', 'error');
+    return;
+  }
+
   for (const file of files) {
     const ext = file.name.split('.').pop().toLowerCase();
     const fileName = `${Date.now()}_${Math.random().toString(36).substr(2,6)}.${ext}`;
 
-    const { error } = await supabase.storage
-      .from('product-images')
-      .upload(fileName, file, { cacheControl: '3600', upsert: false });
+    try {
+      const { error } = await supabase.storage
+        .from('product-images')
+        .upload(fileName, file, { cacheControl: '3600', upsert: false });
 
-    if (error) {
-      showToast('Upload failed: ' + error.message, 'error');
-      continue;
+      if (error) {
+        showToast('Upload failed: ' + error.message, 'error');
+        continue;
+      }
+
+      const { data } = supabase.storage.from('product-images').getPublicUrl(fileName);
+      formImages.push(data.publicUrl);
+      renderImgPreviews();
+    } catch (err) {
+      showToast('Upload error: ' + err.message, 'error');
+      console.error('Upload error:', err);
     }
-
-    const { data } = supabase.storage.from('product-images').getPublicUrl(fileName);
-    formImages.push(data.publicUrl);
-    renderImgPreviews();
   }
 
   progressEl.innerHTML = '';
