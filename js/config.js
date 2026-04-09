@@ -7,7 +7,7 @@
 const SUPABASE_URL = 'https://nihjwidrsbtiolgruzsi.supabase.co';
 // Example: 'https://xyzabcdef.supabase.co'
 
-const SUPABASE_ANON_KEY = 'sb_publishable_DuZfigPwZuae5_K53eCf4g_CHpaqE3p';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5paGp3aWRyc2J0aW9sZ3J1enNpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3MjI1OTMsImV4cCI6MjA5MTI5ODU5M30.JtjmM2JuAGiKkAJ3cd07_76W--7uqc46LSxRmbn7Mnk';
 // Example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
 
 // WhatsApp number (no + sign, no spaces)
