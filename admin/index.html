@@ -276,7 +276,7 @@
         <div class="img-upload-area" onclick="document.getElementById('fImgInput').click()">
           <i class="fas fa-cloud-upload-alt"></i>
           <p>Click to upload photos</p>
-          <p style="font-size:0.75rem;margin-top:6px">JPG, PNG, WEBP • Multiple allowed • Saved to Supabase Storage</p>
+          <p style="font-size:0.75rem;margin-top:6px">JPG, PNG, WEBP • Multiple allowed • Compressed &amp; saved automatically</p>
           <input type="file" id="fImgInput" accept="image/*" multiple onchange="handleImgUpload(this)" />
         </div>
         <div id="uploadProgress"></div>
@@ -496,18 +496,18 @@ function closeForm() {
 
 // ---- SAVE PRODUCT ----
 async function saveProduct() {
-  const name     = document.getElementById('fName').value.trim();
-  const category = document.getElementById('fCat').value;
-  const price    = parseFloat(document.getElementById('fPrice').value);
-  const old_price= parseFloat(document.getElementById('fOldPrice').value) || null;
-  const quantity = parseInt(document.getElementById('fQty').value);
-  const badge    = document.getElementById('fBadge').value || null;
+  const name        = document.getElementById('fName').value.trim();
+  const category    = document.getElementById('fCat').value;
+  const price       = parseFloat(document.getElementById('fPrice').value);
+  const old_price   = parseFloat(document.getElementById('fOldPrice').value) || null;
+  const quantity    = parseInt(document.getElementById('fQty').value);
+  const badge       = document.getElementById('fBadge').value || null;
   const description = document.getElementById('fDesc').value.trim();
 
-  if (!name)               { showToast('Please enter a product name', 'error'); return; }
-  if (!category)           { showToast('Please select a category', 'error'); return; }
-  if (isNaN(price))        { showToast('Please enter a valid price', 'error'); return; }
-  if (isNaN(quantity))     { showToast('Please enter a valid quantity', 'error'); return; }
+  if (!name)           { showToast('Please enter a product name', 'error'); return; }
+  if (!category)       { showToast('Please select a category', 'error'); return; }
+  if (isNaN(price))    { showToast('Please enter a valid price', 'error'); return; }
+  if (isNaN(quantity)) { showToast('Please enter a valid quantity', 'error'); return; }
 
   const saveBtn = document.getElementById('btnSave');
   saveBtn.disabled = true;
@@ -515,16 +515,28 @@ async function saveProduct() {
 
   const productData = {
     name, category, price, old_price, quantity, badge, description,
-    images: formImages,
+    images: formImages,   // base64 strings stored directly in DB
     colors: formColors,
     active: true
   };
 
+  // Safety timeout — if Supabase takes >10s, show error instead of freezing
+  const timeout = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error('Request timed out. Check your Supabase URL and key in config.js')), 10000)
+  );
+
   let result;
-  if (editingId) {
-    result = await supabase.from('products').update(productData).eq('id', editingId).select().single();
-  } else {
-    result = await supabase.from('products').insert([productData]).select().single();
+  try {
+    const dbCall = editingId
+      ? supabase.from('products').update(productData).eq('id', editingId).select().single()
+      : supabase.from('products').insert([productData]).select().single();
+
+    result = await Promise.race([dbCall, timeout]);
+  } catch (err) {
+    saveBtn.disabled = false;
+    saveBtn.innerHTML = '<i class="fas fa-check"></i> Save Product';
+    showToast('Error: ' + err.message, 'error');
+    return;
   }
 
   saveBtn.disabled = false;
@@ -541,34 +553,47 @@ async function saveProduct() {
   showToast(editingId ? 'Product updated ✦' : 'Product added ✦', 'success');
 }
 
-// ---- IMAGE UPLOAD to Supabase Storage ----
+// ---- IMAGE HANDLING (base64 — stored in database, no Storage needed) ----
 async function handleImgUpload(input) {
   const files = Array.from(input.files);
   if (!files.length) return;
 
   const progressEl = document.getElementById('uploadProgress');
-  progressEl.innerHTML = `<div class="img-uploading"><div class="spinner-sm"></div> Uploading ${files.length} photo${files.length>1?'s':''}…</div>`;
+  progressEl.innerHTML = `<div class="img-uploading"><div class="spinner-sm"></div> Processing ${files.length} photo${files.length>1?'s':''}…</div>`;
 
   for (const file of files) {
-    const ext = file.name.split('.').pop().toLowerCase();
-    const fileName = `${Date.now()}_${Math.random().toString(36).substr(2,6)}.${ext}`;
-
-    const { error } = await supabase.storage
-      .from('product-images')
-      .upload(fileName, file, { cacheControl: '3600', upsert: false });
-
-    if (error) {
-      showToast('Upload failed: ' + error.message, 'error');
-      continue;
+    // Resize + compress image to keep DB size small (max 800px wide)
+    const base64 = await resizeAndEncode(file, 800);
+    if (base64) {
+      formImages.push(base64);
+      renderImgPreviews();
     }
-
-    const { data } = supabase.storage.from('product-images').getPublicUrl(fileName);
-    formImages.push(data.publicUrl);
-    renderImgPreviews();
   }
 
   progressEl.innerHTML = '';
   input.value = '';
+}
+
+// Resize image and return base64 string
+function resizeAndEncode(file, maxWidth) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let w = img.width, h = img.height;
+        if (w > maxWidth) { h = Math.round(h * maxWidth / w); w = maxWidth; }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', 0.82));
+      };
+      img.onerror = () => resolve(null);
+      img.src = e.target.result;
+    };
+    reader.onerror = () => resolve(null);
+    reader.readAsDataURL(file);
+  });
 }
 
 function renderImgPreviews() {
