@@ -18,8 +18,9 @@
     @keyframes spin{to{transform:rotate(360deg);}}
     @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
+    /* LOGIN */
     .login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--pink-pale),#fce8ed);}
-    .login-box{background:white;border-radius:20px;padding:50px 44px;box-shadow:0 8px 40px rgba(212,99,122,0.15);width:420px;text-align:center;}
+    .login-box{background:white;border-radius:20px;padding:50px 44px;box-shadow:0 8px 40px rgba(212,99,122,0.15);width:380px;text-align:center;}
     .login-logo{font-family:var(--font-display);font-size:2rem;color:var(--pink-deep);margin-bottom:6px;}
     .login-sub{font-size:0.78rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-light);margin-bottom:32px;}
     .login-box input{width:100%;padding:13px 18px;border:1.5px solid var(--border);border-radius:10px;font-family:var(--font-body);font-size:0.9rem;color:var(--text-dark);background:var(--pink-pale);outline:none;margin-bottom:14px;}
@@ -28,14 +29,7 @@
     .btn-login:hover{transform:translateY(-2px);}
     .login-error{color:#e05555;font-size:0.82rem;margin-top:10px;display:none;}
 
-    /* CONNECTION STATUS BOX */
-    .conn-box{margin-top:20px;padding:14px 16px;border-radius:10px;font-size:0.82rem;text-align:left;display:none;}
-    .conn-box.checking{background:#fff8e1;border:1px solid #ffe082;color:#795548;display:block;}
-    .conn-box.ok{background:#e8f5e9;border:1px solid #a5d6a7;color:#2e7d32;display:block;}
-    .conn-box.fail{background:#ffebee;border:1px solid #ef9a9a;color:#b71c1c;display:block;}
-    .conn-box strong{display:block;margin-bottom:4px;}
-    .conn-box code{background:rgba(0,0,0,0.06);padding:2px 6px;border-radius:4px;font-size:0.78rem;word-break:break-all;}
-
+    /* ADMIN LAYOUT */
     .admin-app{display:none;min-height:100vh;}
     .admin-header{background:var(--text-dark);padding:0 32px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
     .admin-logo{font-family:var(--font-display);font-size:1.3rem;color:var(--pink-light);}
@@ -47,22 +41,18 @@
     .header-store-link:hover{color:var(--pink-light);}
     .btn-logout{padding:7px 18px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.5);border-radius:50px;cursor:pointer;font-family:var(--font-body);font-size:0.78rem;transition:all 0.2s;}
     .btn-logout:hover{background:rgba(255,255,255,0.2);color:white;}
-
-    /* DB STATUS BANNER */
-    .db-banner{padding:12px 32px;font-size:0.82rem;display:none;align-items:center;gap:10px;}
-    .db-banner.ok{background:#e8f5e9;color:#2e7d32;display:flex;}
-    .db-banner.fail{background:#ffebee;color:#b71c1c;display:flex;}
-
     .admin-body{max-width:1300px;margin:0 auto;padding:36px 24px;}
     .admin-page{display:none;}
     .admin-page.active{display:block;animation:fadeIn 0.25s ease;}
 
+    /* STATS */
     .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-bottom:36px;}
     .stat-card{background:white;border-radius:var(--radius);padding:28px 24px;border:1px solid var(--border);display:flex;align-items:center;gap:18px;}
     .stat-icon{width:52px;height:52px;border-radius:14px;background:var(--pink-pale);display:flex;align-items:center;justify-content:center;color:var(--pink-deep);font-size:1.3rem;flex-shrink:0;}
     .stat-val{font-family:var(--font-display);font-size:2rem;color:var(--text-dark);line-height:1;}
     .stat-lbl{font-size:0.8rem;color:var(--text-light);margin-top:4px;}
 
+    /* TABLE */
     .page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;}
     .page-header h2{font-family:var(--font-display);font-size:1.8rem;}
     .btn-add{padding:11px 26px;background:linear-gradient(135deg,var(--pink),var(--pink-deep));color:white;border:none;border-radius:50px;cursor:pointer;font-family:var(--font-body);font-size:0.85rem;font-weight:500;letter-spacing:0.08em;display:flex;align-items:center;gap:8px;transition:transform 0.2s;}
@@ -98,6 +88,7 @@
     .btn-del{color:var(--text-light);}
     .btn-del:hover{background:#fff0f0;border-color:#e05555;color:#e05555;}
 
+    /* FORM */
     .form-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:2000;display:none;align-items:flex-start;justify-content:center;overflow-y:auto;padding:40px 16px;}
     .form-overlay.open{display:flex;}
     .product-form{background:white;border-radius:20px;width:720px;max-width:96vw;padding:40px;box-shadow:0 20px 80px rgba(0,0,0,0.2);animation:fadeIn 0.25s ease;margin:auto;}
@@ -110,6 +101,7 @@
     .form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--pink);background:white;}
     .form-textarea{resize:vertical;min-height:90px;}
 
+    /* Image upload */
     .img-upload-area{border:2px dashed var(--border);border-radius:var(--radius);padding:28px;text-align:center;cursor:pointer;transition:all 0.2s;background:var(--pink-pale);}
     .img-upload-area:hover{border-color:var(--pink);background:white;}
     .img-upload-area i{font-size:2rem;color:var(--pink-light);margin-bottom:10px;display:block;}
@@ -119,9 +111,10 @@
     .img-preview{width:80px;height:80px;border-radius:10px;overflow:hidden;position:relative;border:1px solid var(--border);}
     .img-preview img{width:100%;height:100%;object-fit:cover;}
     .img-preview .remove-img{position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:rgba(224,85,85,0.9);color:white;border:none;cursor:pointer;font-size:0.65rem;display:flex;align-items:center;justify-content:center;}
-    .img-uploading{display:flex;align-items:center;gap:8px;padding:10px;font-size:0.82rem;color:var(--pink-deep);}
-    .spinner-sm{width:16px;height:16px;border:2px solid var(--pink-light);border-top-color:var(--pink-deep);border-radius:50%;animation:spin 0.8s linear infinite;flex-shrink:0;}
+    .img-uploading{display:flex;align-items:center;justify-content:center;gap:8px;padding:10px;font-size:0.82rem;color:var(--pink-deep);}
+    .spinner-sm{width:16px;height:16px;border:2px solid var(--pink-light);border-top-color:var(--pink-deep);border-radius:50%;animation:spin 0.8s linear infinite;}
 
+    /* Colors */
     .color-manager{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
     .color-chip{width:32px;height:32px;border-radius:50%;border:3px solid white;box-shadow:0 0 0 1.5px var(--border);cursor:pointer;position:relative;display:flex;align-items:center;justify-content:center;}
     .rm-color{position:absolute;inset:0;border-radius:50%;display:none;background:rgba(0,0,0,0.5);color:white;font-size:0.6rem;align-items:center;justify-content:center;cursor:pointer;border:none;}
@@ -135,14 +128,11 @@
     .btn-save:hover{transform:translateY(-1px);}
     .btn-save:disabled{opacity:0.6;cursor:not-allowed;transform:none;}
 
-    /* ERROR LOG inside form */
-    .save-error{background:#ffebee;border:1px solid #ef9a9a;color:#b71c1c;border-radius:10px;padding:12px 16px;font-size:0.82rem;margin-top:16px;display:none;}
-    .save-error strong{display:block;margin-bottom:4px;}
-
-    .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--text-dark);color:white;padding:14px 28px;border-radius:50px;font-size:0.88rem;z-index:9999;transition:transform 0.3s;pointer-events:none;max-width:90vw;text-align:center;}
+    /* TOAST */
+    .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--text-dark);color:white;padding:14px 28px;border-radius:50px;font-size:0.88rem;z-index:9999;transition:transform 0.3s;pointer-events:none;}
     .toast.show{transform:translateX(-50%) translateY(0);}
-    .toast.error{background:#c62828;}
-    .toast.success{background:#2e7d32;}
+    .toast.error{background:#e05555;}
+    .toast.success{background:#3aaa6e;}
 
     @media(max-width:900px){.stats-grid{grid-template-columns:1fr 1fr;}.form-grid{grid-template-columns:1fr;}}
     @media(max-width:600px){.stats-grid{grid-template-columns:1fr;}.admin-nav{display:none;}}
@@ -159,16 +149,12 @@
     <input type="password" id="loginPass" placeholder="Password" onkeypress="if(event.key==='Enter')doLogin()" />
     <button class="btn-login" onclick="doLogin()">Sign In</button>
     <p class="login-error" id="loginError">Incorrect username or password</p>
-    <!-- Connection status shows here after login -->
-    <div class="conn-box" id="connBox"></div>
+    <p style="margin-top:20px;font-size:0.75rem;color:#ccc">Default: admin / bling2025</p>
   </div>
 </div>
 
 <!-- ADMIN APP -->
 <div class="admin-app" id="adminApp">
-  <!-- DB status banner at top -->
-  <div class="db-banner" id="dbBanner"></div>
-
   <header class="admin-header">
     <div class="admin-logo">✦ Admin</div>
     <nav class="admin-nav">
@@ -182,6 +168,7 @@
   </header>
 
   <div class="admin-body">
+    <!-- DASHBOARD -->
     <div class="admin-page active" id="page-dashboard">
       <div class="page-header"><h2>Dashboard</h2></div>
       <div class="stats-grid" id="statsGrid">
@@ -193,6 +180,7 @@
       </div>
     </div>
 
+    <!-- PRODUCTS -->
     <div class="admin-page" id="page-products">
       <div class="page-header">
         <h2>Products</h2>
@@ -218,9 +206,14 @@
         </div>
         <div style="overflow-x:auto">
           <table>
-            <thead><tr><th>Image</th><th>Product Name</th><th>Category</th><th>Price</th><th>Quantity</th><th>Status</th><th>Actions</th></tr></thead>
+            <thead>
+              <tr>
+                <th>Image</th><th>Product Name</th><th>Category</th>
+                <th>Price</th><th>Quantity</th><th>Status</th><th>Actions</th>
+              </tr>
+            </thead>
             <tbody id="productTableBody">
-              <tr><td colspan="7" style="text-align:center;padding:40px">
+              <tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-light)">
                 <div style="display:inline-block;width:32px;height:32px;border:3px solid var(--pink-light);border-top-color:var(--pink-deep);border-radius:50%;animation:spin 0.8s linear infinite"></div>
               </td></tr>
             </tbody>
@@ -231,7 +224,7 @@
   </div>
 </div>
 
-<!-- PRODUCT FORM -->
+<!-- PRODUCT FORM MODAL -->
 <div class="form-overlay" id="formOverlay">
   <div class="product-form">
     <h2 class="form-title" id="formTitle">Add New Product</h2>
@@ -257,7 +250,7 @@
         <input type="number" class="form-input" id="fPrice" placeholder="0.00" step="0.01" min="0" />
       </div>
       <div class="form-group">
-        <label>Original Price — for sale</label>
+        <label>Original Price (AZN) — for sale display</label>
         <input type="number" class="form-input" id="fOldPrice" placeholder="Leave blank if no sale" step="0.01" min="0" />
       </div>
       <div class="form-group">
@@ -279,11 +272,11 @@
         <textarea class="form-textarea" id="fDesc" placeholder="Describe this product…"></textarea>
       </div>
       <div class="form-group full">
-        <label>Product Photos</label>
+        <label>Product Photos (upload from your phone or computer)</label>
         <div class="img-upload-area" onclick="document.getElementById('fImgInput').click()">
           <i class="fas fa-cloud-upload-alt"></i>
           <p>Click to upload photos</p>
-          <p style="font-size:0.75rem;margin-top:6px">JPG, PNG, WEBP • Multiple allowed • Compressed automatically</p>
+          <p style="font-size:0.75rem;margin-top:6px">JPG, PNG, WEBP • Multiple allowed • Saved to Supabase Storage</p>
           <input type="file" id="fImgInput" accept="image/*" multiple onchange="handleImgUpload(this)" />
         </div>
         <div id="uploadProgress"></div>
@@ -296,11 +289,6 @@
         </div>
       </div>
     </div>
-    <!-- Error message shown here instead of silently hanging -->
-    <div class="save-error" id="saveError">
-      <strong>❌ Could not save product</strong>
-      <span id="saveErrorMsg"></span>
-    </div>
     <div class="form-footer">
       <button class="btn-cancel" onclick="closeForm()">Cancel</button>
       <button class="btn-save" id="btnSave" onclick="saveProduct()"><i class="fas fa-check"></i> Save Product</button>
@@ -310,136 +298,104 @@
 
 <div class="toast" id="toast"></div>
 
+<!-- Supabase JS -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="../js/config.js"></script>
 <script>
 // ============================================================
-//  ADMIN — Bling Bling Baku
+//  SUPABASE CONFIG (inlined to avoid path issues)
+// ============================================================
+const SUPABASE_URL = 'https://nihjwidrsbtiolgruzsi.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5paGp3aWRyc2J0aW9sZ3J1enNpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3MjI1OTMsImV4cCI6MjA5MTI5ODU5M30.JtjmM2JuAGiKkAJ3cd07_76W--7uqc46LSxRmbn7Mnk';
+const WA_NUMBER = '994702003335';
+
+let supabase;
+function initSupabase() {
+  if (typeof window.supabase !== 'undefined') {
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  } else {
+    console.error('Supabase JS not loaded. Check CDN script tag.');
+  }
+}
+</script>
+<script>
+// ============================================================
+//  ADMIN LOGIC — Supabase powered
 // ============================================================
 
+// Admin credentials (change these!)
 const ADMIN_CREDS = { user: 'admin', pass: 'bling2025' };
-let allProducts = [];
-let filtered    = [];
-let editingId   = null;
-let formImages  = [];
-let formColors  = [];
-let dbOk        = false;
 
-// ============================================================
-//  AUTH
-// ============================================================
-async function doLogin() {
+let allProducts = [];   // full list from DB
+let filtered   = [];    // after search/filter
+let editingId  = null;
+let formImages = [];    // URLs already uploaded
+let formColors = [];
+
+// ---- INIT ----
+window.addEventListener('DOMContentLoaded', () => {
+  // Small delay to ensure Supabase CDN script has fully executed
+  if (typeof window.supabase !== 'undefined') {
+    initSupabase();
+  } else {
+    setTimeout(() => initSupabase(), 200);
+  }
+});
+
+// ---- AUTH ----
+function doLogin() {
   const u = document.getElementById('loginUser').value.trim();
   const p = document.getElementById('loginPass').value;
-  if (u !== ADMIN_CREDS.user || p !== ADMIN_CREDS.pass) {
-    document.getElementById('loginError').style.display = 'block';
-    return;
-  }
-  document.getElementById('loginError').style.display = 'none';
-
-  // Test Supabase connection BEFORE showing admin
-  const box = document.getElementById('connBox');
-  box.className = 'conn-box checking';
-  box.innerHTML = '<strong>⏳ Connecting to database…</strong>Please wait.';
-
-  const result = await testConnection();
-
-  if (!result.ok) {
-    box.className = 'conn-box fail';
-    box.innerHTML = `<strong>❌ Database connection failed</strong>
-      Error: <code>${result.error}</code><br><br>
-      <strong>Fix:</strong> Open <code>js/config.js</code> and make sure your Supabase URL and Key are correct. 
-      They must NOT still say "PASTE_YOUR..." — replace them with your real values from 
-      supabase.com → Settings → API.`;
-    return;
-  }
-
-  // Connected!
-  box.className = 'conn-box ok';
-  box.innerHTML = '<strong>✅ Connected to database!</strong>Opening admin…';
-
-  setTimeout(() => {
+  if (u === ADMIN_CREDS.user && p === ADMIN_CREDS.pass) {
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('adminApp').style.display = 'block';
-    const banner = document.getElementById('dbBanner');
-    banner.className = 'db-banner ok';
-    banner.innerHTML = '✅ Connected to Supabase database';
-    dbOk = true;
     loadDashboard();
     loadProductsPage();
-  }, 600);
-}
-
-async function testConnection() {
-  try {
-    initSupabase();
-    // Check if credentials are still placeholder
-    if (SUPABASE_URL.includes('PASTE_YOUR') || SUPABASE_ANON_KEY.includes('PASTE_YOUR')) {
-      return { ok: false, error: 'Credentials not set — still showing placeholder text in config.js' };
-    }
-    // Try a real DB call with 8s timeout
-    const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('Timed out after 8 seconds — check your Supabase URL')), 8000));
-    const query   = supabase.from('products').select('id').limit(1);
-    const result  = await Promise.race([query, timeout]);
-    if (result.error) return { ok: false, error: result.error.message };
-    return { ok: true };
-  } catch (e) {
-    return { ok: false, error: e.message };
+  } else {
+    document.getElementById('loginError').style.display = 'block';
   }
 }
-
 function doLogout() {
   document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('adminApp').style.display = 'none';
-  document.getElementById('connBox').className = 'conn-box';
   document.getElementById('loginUser').value = '';
   document.getElementById('loginPass').value = '';
 }
 
-// ============================================================
-//  NAVIGATION
-// ============================================================
+// ---- NAVIGATION ----
 function showPage(page, btn) {
   document.querySelectorAll('.admin-page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-' + page).classList.add('active');
   document.querySelectorAll('.admin-nav button').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   if (page === 'dashboard') loadDashboard();
-  if (page === 'products')  loadProductsPage();
+  if (page === 'products') loadProductsPage();
 }
 
-// ============================================================
-//  DASHBOARD
-// ============================================================
+// ---- DASHBOARD ----
 async function loadDashboard() {
-  const { data: products, error } = await supabase.from('products').select('*');
-  if (error || !products) {
-    document.getElementById('statsGrid').innerHTML = `<div style="grid-column:1/-1;color:#e05555;font-size:0.88rem">Could not load stats: ${error?.message}</div>`;
-    return;
-  }
+  const { data: products } = await supabase.from('products').select('*');
+  if (!products) return;
+
   const active     = products.filter(p => p.active).length;
   const outOfStock = products.filter(p => p.quantity <= 0).length;
   const totalVal   = products.reduce((s, p) => s + (p.price * (p.quantity || 0)), 0);
+
   document.getElementById('statsGrid').innerHTML = `
     <div class="stat-card"><div class="stat-icon"><i class="fas fa-gem"></i></div><div><div class="stat-val">${products.length}</div><div class="stat-lbl">Total Products</div></div></div>
-    <div class="stat-card"><div class="stat-icon"><i class="fas fa-check-circle"></i></div><div><div class="stat-val">${active}</div><div class="stat-lbl">Active</div></div></div>
+    <div class="stat-card"><div class="stat-icon"><i class="fas fa-check-circle"></i></div><div><div class="stat-val">${active}</div><div class="stat-lbl">Active Products</div></div></div>
     <div class="stat-card"><div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div><div><div class="stat-val" style="color:#e05555">${outOfStock}</div><div class="stat-lbl">Out of Stock</div></div></div>
     <div class="stat-card"><div class="stat-icon"><i class="fas fa-tag"></i></div><div><div class="stat-val">${totalVal.toFixed(0)}</div><div class="stat-lbl">Stock Value (AZN)</div></div></div>`;
+
   const low = products.filter(p => p.quantity > 0 && p.quantity <= 5);
   document.getElementById('lowStockList').innerHTML = low.length
     ? low.map(p => `<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)"><span style="font-weight:500">${p.name}</span><span style="color:#e07a20;font-weight:500">${p.quantity} left</span></div>`).join('')
-    : '<p style="color:var(--text-light);font-size:0.88rem">All products well stocked ✦</p>';
+    : '<p style="color:var(--text-light);font-size:0.88rem">All products are well stocked ✦</p>';
 }
 
-// ============================================================
-//  PRODUCTS TABLE
-// ============================================================
+// ---- LOAD PRODUCTS TABLE ----
 async function loadProductsPage() {
   const { data, error } = await supabase.from('products').select('*').order('created_at', { ascending: false });
-  if (error) {
-    document.getElementById('productTableBody').innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:#e05555">Failed to load: ${error.message}</td></tr>`;
-    return;
-  }
+  if (error) { showToast('Failed to load products: ' + error.message, 'error'); return; }
   allProducts = data || [];
   filterTable();
 }
@@ -448,6 +404,7 @@ function filterTable() {
   const q      = (document.getElementById('tableSearch')?.value || '').toLowerCase().trim();
   const cat    = document.getElementById('catFilter')?.value || '';
   const status = document.getElementById('statusFilter')?.value || '';
+
   filtered = allProducts.filter(p => {
     const matchQ = !q || p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q);
     const matchC = !cat || p.category === cat;
@@ -459,6 +416,7 @@ function filterTable() {
 
 function renderTable() {
   document.getElementById('productTableBody').innerHTML = filtered.map(p => {
+    const isActive = p.active;
     const qty = p.quantity || 0;
     const qtyClass = qty <= 0 ? 'qty-out' : qty <= 5 ? 'qty-low' : '';
     const images = Array.isArray(p.images) ? p.images : [];
@@ -470,12 +428,12 @@ function renderTable() {
       <td>${thumb}</td>
       <td><div class="prod-name">${p.name}</div></td>
       <td><span class="cat-badge">${p.category}</span></td>
-      <td class="price-cell">${p.price} AZN${p.old_price?`<br><span style="font-size:0.75rem;color:var(--text-light);text-decoration:line-through">${p.old_price}</span>`:''}</td>
+      <td class="price-cell">${p.price} AZN${p.old_price ? `<br><span style="font-size:0.75rem;color:var(--text-light);text-decoration:line-through">${p.old_price}</span>` : ''}</td>
       <td class="qty-cell ${qtyClass}">${qty}</td>
       <td>
-        <button class="status-toggle" data-id="${p.id}" data-active="${p.active}" onclick="toggleStatus(this)">
-          <div class="toggle-dot ${p.active?'toggle-on':'toggle-off'}"></div>
-          <span style="font-size:0.8rem;color:var(--text-light)">${p.active?'Active':'Hidden'}</span>
+        <button class="status-toggle" data-id="${p.id}" data-active="${isActive}" onclick="toggleStatus(this)">
+          <div class="toggle-dot ${isActive ? 'toggle-on' : 'toggle-off'}"></div>
+          <span style="font-size:0.8rem;color:var(--text-light)">${isActive ? 'Active' : 'Hidden'}</span>
         </button>
       </td>
       <td>
@@ -488,19 +446,20 @@ function renderTable() {
   }).join('') || '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-light)">No products found</td></tr>';
 }
 
-// ============================================================
-//  TOGGLE / DELETE
-// ============================================================
+// ---- TOGGLE STATUS ----
 async function toggleStatus(btn) {
-  const id      = btn.dataset.id;
+  const id = btn.dataset.id;
   const current = btn.dataset.active === 'true';
   const { error } = await supabase.from('products').update({ active: !current }).eq('id', id);
   if (error) { showToast('Error: ' + error.message, 'error'); return; }
+  // Update local cache
   const p = allProducts.find(x => String(x.id) === String(id));
   if (p) p.active = !current;
   filterTable();
+  showToast(current ? 'Product hidden' : 'Product activated', 'success');
 }
 
+// ---- DELETE ----
 async function deleteProduct(id) {
   if (!confirm('Delete this product permanently?')) return;
   const { error } = await supabase.from('products').delete().eq('id', id);
@@ -508,36 +467,34 @@ async function deleteProduct(id) {
   allProducts = allProducts.filter(p => String(p.id) !== String(id));
   filterTable();
   loadDashboard();
-  showToast('Deleted', 'success');
+  showToast('Product deleted', 'success');
 }
 
-// ============================================================
-//  FORM OPEN / CLOSE
-// ============================================================
+// ---- OPEN FORM ----
 async function openForm(id) {
-  editingId  = id || null;
+  editingId = id || null;
   formImages = [];
   formColors = [];
-  document.getElementById('imgPreviews').innerHTML    = '';
+  document.getElementById('imgPreviews').innerHTML = '';
   document.getElementById('uploadProgress').innerHTML = '';
-  document.getElementById('saveError').style.display  = 'none';
-  document.getElementById('colorManager').innerHTML   = '<button class="add-color-btn" onclick="addColorPicker()"><i class="fas fa-plus"></i> Add Color</button>';
-  document.getElementById('btnSave').disabled         = false;
-  document.getElementById('btnSave').innerHTML        = '<i class="fas fa-check"></i> Save Product';
+  document.getElementById('colorManager').innerHTML = '<button class="add-color-btn" onclick="addColorPicker()"><i class="fas fa-plus"></i> Add Color</button>';
+  document.getElementById('btnSave').disabled = false;
 
   if (editingId) {
     document.getElementById('formTitle').textContent = 'Edit Product';
+    // Find in cache first, fall back to DB
     let p = allProducts.find(x => String(x.id) === String(editingId));
     if (!p) {
       const { data } = await supabase.from('products').select('*').eq('id', editingId).single();
       p = data;
     }
     if (!p) { showToast('Product not found', 'error'); return; }
+
     document.getElementById('fName').value     = p.name || '';
     document.getElementById('fCat').value      = p.category || '';
     document.getElementById('fPrice').value    = p.price || '';
     document.getElementById('fOldPrice').value = p.old_price || '';
-    document.getElementById('fQty').value      = p.quantity ?? '';
+    document.getElementById('fQty').value      = p.quantity !== undefined ? p.quantity : '';
     document.getElementById('fBadge').value    = p.badge || '';
     document.getElementById('fDesc').value     = p.description || '';
     formImages = Array.isArray(p.images) ? [...p.images] : [];
@@ -558,51 +515,46 @@ function closeForm() {
   editingId = null;
 }
 
-// ============================================================
-//  SAVE PRODUCT — with full error reporting, never hangs
-// ============================================================
+// ---- SAVE PRODUCT ----
 async function saveProduct() {
-  const name        = document.getElementById('fName').value.trim();
-  const category    = document.getElementById('fCat').value;
-  const price       = parseFloat(document.getElementById('fPrice').value);
-  const old_price   = parseFloat(document.getElementById('fOldPrice').value) || null;
-  const quantity    = parseInt(document.getElementById('fQty').value);
-  const badge       = document.getElementById('fBadge').value || null;
+  const name     = document.getElementById('fName').value.trim();
+  const category = document.getElementById('fCat').value;
+  const price    = parseFloat(document.getElementById('fPrice').value);
+  const old_price= parseFloat(document.getElementById('fOldPrice').value) || null;
+  const quantity = parseInt(document.getElementById('fQty').value);
+  const badge    = document.getElementById('fBadge').value || null;
   const description = document.getElementById('fDesc').value.trim();
 
-  // Validation
-  if (!name)           return showSaveError('Please enter a product name');
-  if (!category)       return showSaveError('Please select a category');
-  if (isNaN(price))    return showSaveError('Please enter a valid price');
-  if (isNaN(quantity)) return showSaveError('Please enter a valid quantity');
+  if (!name)               { showToast('Please enter a product name', 'error'); return; }
+  if (!category)           { showToast('Please select a category', 'error'); return; }
+  if (isNaN(price))        { showToast('Please enter a valid price', 'error'); return; }
+  if (isNaN(quantity))     { showToast('Please enter a valid quantity', 'error'); return; }
 
-  document.getElementById('saveError').style.display = 'none';
   const saveBtn = document.getElementById('btnSave');
   saveBtn.disabled = true;
   saveBtn.innerHTML = '<div class="spinner-sm"></div> Saving…';
 
-  const productData = { name, category, price, old_price, quantity, badge, description, images: formImages, colors: formColors, active: true };
+  const productData = {
+    name, category, price, old_price, quantity, badge, description,
+    images: formImages,
+    colors: formColors,
+    active: true
+  };
 
-  // Race against a 12-second timeout so it NEVER hangs forever
   let result;
-  try {
-    const dbOp = editingId
-      ? supabase.from('products').update(productData).eq('id', editingId).select().single()
-      : supabase.from('products').insert([productData]).select().single();
-    const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error(
-      'Timed out (12s). Check: 1) Your Supabase URL in config.js is correct. 2) Your Supabase project is not paused. 3) You have internet connection.'
-    )), 12000));
-    result = await Promise.race([dbOp, timeout]);
-  } catch(e) {
-    saveBtn.disabled = false;
-    saveBtn.innerHTML = '<i class="fas fa-check"></i> Save Product';
-    return showSaveError(e.message);
+  if (editingId) {
+    result = await supabase.from('products').update(productData).eq('id', editingId).select().single();
+  } else {
+    result = await supabase.from('products').insert([productData]).select().single();
   }
 
   saveBtn.disabled = false;
   saveBtn.innerHTML = '<i class="fas fa-check"></i> Save Product';
 
-  if (result.error) return showSaveError(result.error.message);
+  if (result.error) {
+    showToast('Save failed: ' + result.error.message, 'error');
+    return;
+  }
 
   closeForm();
   await loadProductsPage();
@@ -610,48 +562,34 @@ async function saveProduct() {
   showToast(editingId ? 'Product updated ✦' : 'Product added ✦', 'success');
 }
 
-function showSaveError(msg) {
-  const el = document.getElementById('saveError');
-  document.getElementById('saveErrorMsg').textContent = msg;
-  el.style.display = 'block';
-  el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-}
-
-// ============================================================
-//  IMAGES — base64, no storage needed
-// ============================================================
+// ---- IMAGE UPLOAD to Supabase Storage ----
 async function handleImgUpload(input) {
   const files = Array.from(input.files);
   if (!files.length) return;
-  const prog = document.getElementById('uploadProgress');
-  prog.innerHTML = `<div class="img-uploading"><div class="spinner-sm"></div> Processing ${files.length} photo${files.length>1?'s':''}…</div>`;
-  for (const file of files) {
-    const b64 = await resizeImage(file, 900);
-    if (b64) { formImages.push(b64); renderImgPreviews(); }
-  }
-  prog.innerHTML = '';
-  input.value = '';
-}
 
-function resizeImage(file, maxW) {
-  return new Promise(resolve => {
-    const reader = new FileReader();
-    reader.onload = e => {
-      const img = new Image();
-      img.onload = () => {
-        let w = img.width, h = img.height;
-        if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
-        const c = document.createElement('canvas');
-        c.width = w; c.height = h;
-        c.getContext('2d').drawImage(img, 0, 0, w, h);
-        resolve(c.toDataURL('image/jpeg', 0.82));
-      };
-      img.onerror = () => resolve(null);
-      img.src = e.target.result;
-    };
-    reader.onerror = () => resolve(null);
-    reader.readAsDataURL(file);
-  });
+  const progressEl = document.getElementById('uploadProgress');
+  progressEl.innerHTML = `<div class="img-uploading"><div class="spinner-sm"></div> Uploading ${files.length} photo${files.length>1?'s':''}…</div>`;
+
+  for (const file of files) {
+    const ext = file.name.split('.').pop().toLowerCase();
+    const fileName = `${Date.now()}_${Math.random().toString(36).substr(2,6)}.${ext}`;
+
+    const { error } = await supabase.storage
+      .from('product-images')
+      .upload(fileName, file, { cacheControl: '3600', upsert: false });
+
+    if (error) {
+      showToast('Upload failed: ' + error.message, 'error');
+      continue;
+    }
+
+    const { data } = supabase.storage.from('product-images').getPublicUrl(fileName);
+    formImages.push(data.publicUrl);
+    renderImgPreviews();
+  }
+
+  progressEl.innerHTML = '';
+  input.value = '';
 }
 
 function renderImgPreviews() {
@@ -663,30 +601,29 @@ function renderImgPreviews() {
 }
 function removeImg(i) { formImages.splice(i, 1); renderImgPreviews(); }
 
-// ============================================================
-//  COLORS
-// ============================================================
+// ---- COLOR PICKER ----
 function addColorPicker() {
-  const inp = document.createElement('input');
-  inp.type = 'color'; inp.value = '#E8879E';
-  inp.onchange = e => { formColors.push(e.target.value); renderColorChips(); };
-  inp.click();
+  const input = document.createElement('input');
+  input.type = 'color'; input.value = '#E8879E';
+  input.onchange = (e) => { formColors.push(e.target.value); renderColorChips(); };
+  input.click();
 }
 function renderColorChips() {
   document.getElementById('colorManager').innerHTML =
-    formColors.map((c,i) => `<div class="color-chip" style="background:${c}"><button class="rm-color" onclick="removeColor(${i})"><i class="fas fa-times"></i></button></div>`).join('') +
+    formColors.map((c, i) => `
+      <div class="color-chip" style="background:${c}">
+        <button class="rm-color" onclick="removeColor(${i})"><i class="fas fa-times"></i></button>
+      </div>`).join('') +
     '<button class="add-color-btn" onclick="addColorPicker()"><i class="fas fa-plus"></i> Add Color</button>';
 }
 function removeColor(i) { formColors.splice(i, 1); renderColorChips(); }
 
-// ============================================================
-//  TOAST
-// ============================================================
+// ---- TOAST ----
 function showToast(msg, type = '') {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.className = 'toast show' + (type ? ' ' + type : '');
-  setTimeout(() => { t.className = 'toast'; }, 3500);
+  setTimeout(() => { t.className = 'toast'; }, 3000);
 }
 </script>
 </body>
