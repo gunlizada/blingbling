@@ -1,108 +1,149 @@
 // ============================================================
-// BLING BLING BAKU — Main JS
+//  BLING BLING BAKU — Main JS (Supabase version)
 // ============================================================
 
-const WA_NUMBER = '994702003335';
 let cart = JSON.parse(localStorage.getItem('bbb_cart') || '[]');
-let selectedColor = null;
-let modalQty = 1;
-let currentModalProduct = null;
+let productCache = []; // in-memory cache after first load
 
-// ---- INIT ----
-document.addEventListener('DOMContentLoaded', () => {
-  updateCartUI();
+// ============================================================
+//  INIT
+// ============================================================
+document.addEventListener('DOMContentLoaded', async () => {
+  initSupabase();
+  updateCartBadge();
   renderCategories();
-  renderHomeProducts();
+  await loadAndRenderHome();
 });
 
-// ---- CATEGORIES ----
+// ============================================================
+//  CATEGORIES
+// ============================================================
 function renderCategories() {
   const el = document.getElementById('catGrid');
   if (!el) return;
-  const cats = getCategories();
-  el.innerHTML = cats.map(c => `
+  el.innerHTML = getCategories().map(c => `
     <div class="cat-card" onclick="window.location.href='shop/shop.html?cat=${c.key}'">
       <div class="cat-icon"><i class="${c.icon}"></i></div>
       <p>${c.label}</p>
     </div>`).join('');
 }
 
-// ---- HOME PRODUCTS (show latest 8) ----
-function renderHomeProducts() {
+// ============================================================
+//  HOME — load products from Supabase
+// ============================================================
+async function loadAndRenderHome() {
   const grid = document.getElementById('productsGrid');
   if (!grid) return;
-  const products = getProducts().filter(p => p.active !== false).slice(0, 8);
-  grid.innerHTML = products.map(p => productCard(p)).join('');
+  grid.innerHTML = loadingHTML();
+  productCache = await getProducts();
+  renderProductGrid(grid, productCache.slice(0, 8));
 }
 
-// ---- FILTER (home page) ----
-function filterProducts(cat, btn) {
+function renderProductGrid(grid, products) {
+  grid.innerHTML = products.length
+    ? products.map(p => productCard(p)).join('')
+    : '<p class="no-products" style="grid-column:1/-1;text-align:center;padding:60px;color:var(--text-light)">No products yet. Check back soon! ✦</p>';
+}
+
+function loadingHTML() {
+  return Array(4).fill(0).map(() => `
+    <div class="product-card" style="pointer-events:none">
+      <div class="product-img" style="background:var(--pink-pale);display:flex;align-items:center;justify-content:center;min-height:260px">
+        <div style="width:40px;height:40px;border:3px solid var(--pink-light);border-top-color:var(--pink-deep);border-radius:50%;animation:spin 0.8s linear infinite"></div>
+      </div>
+      <div class="product-info">
+        <div style="height:12px;background:var(--pink-pale);border-radius:6px;margin-bottom:8px"></div>
+        <div style="height:18px;background:var(--pink-pale);border-radius:6px;margin-bottom:8px;width:70%"></div>
+        <div style="height:14px;background:var(--pink-pale);border-radius:6px;width:40%"></div>
+      </div>
+    </div>`).join('');
+}
+
+// ============================================================
+//  FILTER (home page buttons)
+// ============================================================
+async function filterProducts(cat, btn) {
   document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   const grid = document.getElementById('productsGrid');
   if (!grid) return;
-  const all = getProducts().filter(p => p.active !== false);
-  const filtered = cat === 'all' ? all : all.filter(p => p.category === cat);
-  grid.innerHTML = filtered.map(p => productCard(p)).join('');
+  if (!productCache.length) productCache = await getProducts();
+  const filtered = cat === 'all' ? productCache : productCache.filter(p => p.category === cat);
+  renderProductGrid(grid, filtered);
 }
 
-// ---- SEARCH ----
+// ============================================================
+//  SEARCH
+// ============================================================
 function toggleSearch() {
   const bar = document.getElementById('searchBar');
   bar.classList.toggle('open');
   if (bar.classList.contains('open')) document.getElementById('searchInput').focus();
 }
 
-function searchProducts() {
+async function searchProducts() {
   const q = document.getElementById('searchInput').value.toLowerCase().trim();
   const grid = document.getElementById('productsGrid') || document.getElementById('shopGrid');
   if (!grid) return;
 
   if (!q) {
-    // Empty search — restore normal view
-    renderHomeProducts();
+    if (!productCache.length) productCache = await getProducts();
+    renderProductGrid(grid, productCache.slice(0, 8));
     return;
   }
 
-  const results = getProducts().filter(p => p.active !== false && (
+  if (!productCache.length) productCache = await getProducts();
+  const results = productCache.filter(p =>
     p.name.toLowerCase().includes(q) ||
     p.category.toLowerCase().includes(q) ||
     (p.description && p.description.toLowerCase().includes(q))
-  ));
+  );
 
   grid.innerHTML = results.length
     ? results.map(p => productCard(p)).join('')
-    : `<div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--text-light)">
+    : `<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--text-light)">
         <i class="fas fa-search" style="font-size:2rem;display:block;margin-bottom:14px;color:var(--pink-light)"></i>
-        <p>No products found for <strong style="color:var(--text-mid)">"${q}"</strong></p>
+        <p>No results for <strong style="color:var(--text-mid)">"${q}"</strong></p>
        </div>`;
 }
 
-// ---- PRODUCT MODAL ----
-function openModal(id) {
-  const p = getProducts().find(x => x.id === id);
-  if (!p) return;
-  currentModalProduct = p;
-  selectedColor = p.colors && p.colors.length ? p.colors[0] : null;
-  modalQty = 1;
+// ============================================================
+//  PRODUCT MODAL
+// ============================================================
+async function openModal(id) {
+  document.getElementById('modalOverlay').classList.add('open');
+  document.getElementById('productModal').classList.add('open');
+  document.getElementById('modalBody').innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:center;min-height:400px;width:100%">
+      <div style="width:40px;height:40px;border:3px solid var(--pink-light);border-top-color:var(--pink-deep);border-radius:50%;animation:spin 0.8s linear infinite"></div>
+    </div>`;
+  document.body.style.overflow = 'hidden';
 
+  let p = productCache.find(x => String(x.id) === String(id));
+  if (!p) p = await getProduct(id);
+  if (!p) { closeModal(); return; }
+
+  const images = Array.isArray(p.images) ? p.images : [];
+  const colors = Array.isArray(p.colors) ? p.colors : [];
   const isOutOfStock = p.quantity <= 0;
-  const mainImg = p.images && p.images.length
-    ? `<img src="${p.images[0]}" alt="${p.name}" id="modalMainImgEl" />`
+
+  const mainImg = images.length
+    ? `<img src="${images[0]}" alt="${p.name}" id="modalMainImgEl" style="max-width:100%;max-height:380px;object-fit:contain"/>`
     : `<div class="no-img"><i class="fas fa-gem"></i></div>`;
 
-  const thumbs = p.images && p.images.length > 1
-    ? p.images.map((img, i) => `
-        <div class="modal-thumb ${i===0?'active':''}" onclick="switchModalImg(${i})">
-          <img src="${img}" alt="" />
-        </div>`).join('') : '';
+  const thumbs = images.length > 1
+    ? images.map((img, i) => `
+        <div class="modal-thumb ${i===0?'active':''}" onclick="switchModalImg(${i}, this, ${JSON.stringify(images).replace(/"/g,'&quot;')})">
+          <img src="${img}" alt="" /></div>`).join('') : '';
 
-  const colorBtns = p.colors && p.colors.length
-    ? p.colors.map((c,i) => `
-        <button class="modal-color-btn ${i===0?'selected':''}" style="background:${c}"
-          onclick="selectColor('${c}', this)" title="${c}"></button>`).join('') : '';
+  const colorBtns = colors.map((c, i) => `
+    <button class="modal-color-btn ${i===0?'selected':''}" style="background:${c}"
+      onclick="selectModalColor(this)" title="${c}"></button>`).join('');
 
-  const oldPrice = p.oldPrice ? `<span class="old-price" style="text-decoration:line-through;color:var(--text-light);font-size:1rem;margin-right:8px">${p.oldPrice} AZN</span>` : '';
+  const oldPrice = p.old_price ? `<span class="old-price" style="text-decoration:line-through;color:var(--text-light);font-size:1rem;margin-right:8px">${p.old_price} AZN</span>` : '';
+
+  // Store product data on modal for cart use
+  document.getElementById('productModal').dataset.product = JSON.stringify({ id: p.id, name: p.name, price: p.price, image: images[0] || null, quantity: p.quantity });
 
   document.getElementById('modalBody').innerHTML = `
     <div class="modal-gallery">
@@ -129,15 +170,11 @@ function openModal(id) {
       </p>
       <div class="modal-actions">
         ${!isOutOfStock ? `<button class="btn btn-primary" onclick="addToCartFromModal()"><i class="fas fa-shopping-bag"></i> Add to Bag</button>` : ''}
-        <button class="btn btn-outline" onclick="inquireProduct(${p.id})" style="border-color:var(--pink)">
+        <button class="btn btn-outline" onclick="inquireProduct('${p.id}','${p.name.replace(/'/g,"\\'")}',${p.price})">
           <i class="fab fa-whatsapp"></i> Ask on WhatsApp
         </button>
       </div>
     </div>`;
-
-  document.getElementById('modalOverlay').classList.add('open');
-  document.getElementById('productModal').classList.add('open');
-  document.body.style.overflow = 'hidden';
 }
 
 function closeModal() {
@@ -146,65 +183,70 @@ function closeModal() {
   document.body.style.overflow = '';
 }
 
-function switchModalImg(i) {
-  if (!currentModalProduct || !currentModalProduct.images) return;
+function switchModalImg(i, thumb, images) {
   const el = document.getElementById('modalMainImgEl');
-  if (el) el.src = currentModalProduct.images[i];
+  if (el && images[i]) el.src = images[i];
   document.querySelectorAll('.modal-thumb').forEach((t, idx) => t.classList.toggle('active', idx === i));
 }
 
-function selectColor(color, btn) {
-  selectedColor = color;
+function selectModalColor(btn) {
   document.querySelectorAll('.modal-color-btn').forEach(b => b.classList.remove('selected'));
   btn.classList.add('selected');
 }
 
+let _modalQty = 1;
 function changeModalQty(delta) {
-  if (!currentModalProduct) return;
-  modalQty = Math.max(1, Math.min(currentModalProduct.quantity, modalQty + delta));
-  document.getElementById('modalQtyVal').textContent = modalQty;
+  const modal = document.getElementById('productModal');
+  const p = modal.dataset.product ? JSON.parse(modal.dataset.product) : null;
+  const max = p ? p.quantity : 99;
+  _modalQty = Math.max(1, Math.min(max, _modalQty + delta));
+  const el = document.getElementById('modalQtyVal');
+  if (el) el.textContent = _modalQty;
 }
 
 function addToCartFromModal() {
-  if (!currentModalProduct) return;
-  addToCartItem(currentModalProduct, modalQty, selectedColor);
+  const modal = document.getElementById('productModal');
+  const p = modal.dataset.product ? JSON.parse(modal.dataset.product) : null;
+  if (!p) return;
+  const selectedColor = document.querySelector('.modal-color-btn.selected');
+  const color = selectedColor ? selectedColor.style.background : null;
+  addToCartItem(p.id, p.name, p.price, p.image, _modalQty, color);
+  _modalQty = 1;
   closeModal();
 }
 
-// ---- CART ----
+// ============================================================
+//  CART (still localStorage — cart is per-browser which is correct)
+// ============================================================
 function addToCart(id) {
-  const p = getProducts().find(x => x.id === id);
+  const p = productCache.find(x => String(x.id) === String(id));
   if (!p) return;
-  addToCartItem(p, 1, null);
+  const images = Array.isArray(p.images) ? p.images : [];
+  addToCartItem(p.id, p.name, p.price, images[0] || null, 1, null);
 }
 
-function addToCartItem(p, qty, color) {
-  const existing = cart.find(i => i.id === p.id && i.color === color);
-  if (existing) {
-    existing.qty = Math.min(existing.qty + qty, p.quantity);
-  } else {
-    cart.push({ id: p.id, name: p.name, price: p.price, qty, color, image: p.images && p.images.length ? p.images[0] : null });
-  }
-  saveCart();
-  updateCartUI();
-  openCart();
-}
-
-function saveCart() {
+function addToCartItem(id, name, price, image, qty, color) {
+  const existing = cart.find(i => String(i.id) === String(id) && i.color === color);
+  if (existing) { existing.qty += qty; }
+  else { cart.push({ id: String(id), name, price, qty, color, image }); }
   localStorage.setItem('bbb_cart', JSON.stringify(cart));
+  updateCartBadge();
+  renderCartItems();
+  openCartDrawer();
 }
 
-function updateCartUI() {
+function updateCartBadge() {
   const count = cart.reduce((s, i) => s + i.qty, 0);
   document.querySelectorAll('#cartCount').forEach(el => el.textContent = count);
+}
 
-  const itemsEl = document.getElementById('cartItems');
-  if (!itemsEl) return;
-
+function renderCartItems() {
+  const el = document.getElementById('cartItems');
+  if (!el) return;
   if (!cart.length) {
-    itemsEl.innerHTML = `<div class="cart-empty"><i class="fas fa-shopping-bag"></i><p>Your bag is empty</p></div>`;
+    el.innerHTML = `<div class="cart-empty"><i class="fas fa-shopping-bag"></i><p>Your bag is empty</p></div>`;
   } else {
-    itemsEl.innerHTML = cart.map((item, idx) => `
+    el.innerHTML = cart.map((item, idx) => `
       <div class="cart-item">
         <div class="cart-item-img">
           ${item.image ? `<img src="${item.image}" alt="${item.name}" />` : `<i class="fas fa-gem" style="color:var(--pink-light);font-size:1.5rem"></i>`}
@@ -212,11 +254,11 @@ function updateCartUI() {
         <div class="cart-item-info">
           <div class="cart-item-name">${item.name}</div>
           ${item.color ? `<div style="display:flex;align-items:center;gap:6px;margin:4px 0"><span style="width:12px;height:12px;border-radius:50%;background:${item.color};display:inline-block;border:1px solid #eee"></span></div>` : ''}
-          <div class="cart-item-price">${item.price * item.qty} AZN</div>
+          <div class="cart-item-price">${(item.price * item.qty).toFixed(2)} AZN</div>
           <div class="cart-item-controls">
-            <button class="qty-btn" onclick="updateCartQty(${idx}, -1)">−</button>
+            <button class="qty-btn" onclick="updateCartQty(${idx},-1)">−</button>
             <span class="qty-val">${item.qty}</span>
-            <button class="qty-btn" onclick="updateCartQty(${idx}, 1)">+</button>
+            <button class="qty-btn" onclick="updateCartQty(${idx},1)">+</button>
           </div>
         </div>
         <button class="cart-item-remove" onclick="removeFromCart(${idx})"><i class="fas fa-trash-alt"></i></button>
@@ -229,19 +271,26 @@ function updateCartUI() {
 
 function updateCartQty(idx, delta) {
   cart[idx].qty = Math.max(1, cart[idx].qty + delta);
-  saveCart(); updateCartUI();
+  localStorage.setItem('bbb_cart', JSON.stringify(cart));
+  updateCartBadge(); renderCartItems();
 }
 
 function removeFromCart(idx) {
   cart.splice(idx, 1);
-  saveCart(); updateCartUI();
+  localStorage.setItem('bbb_cart', JSON.stringify(cart));
+  updateCartBadge(); renderCartItems();
 }
 
 function toggleCart() {
-  document.getElementById('cartDrawer').classList.toggle('open');
-  document.getElementById('cartOverlay').classList.toggle('open');
+  const drawer = document.getElementById('cartDrawer');
+  const overlay = document.getElementById('cartOverlay');
+  if (drawer.classList.contains('open')) {
+    drawer.classList.remove('open'); overlay.classList.remove('open');
+  } else { openCartDrawer(); }
 }
-function openCart() {
+
+function openCartDrawer() {
+  renderCartItems();
   document.getElementById('cartDrawer').classList.add('open');
   document.getElementById('cartOverlay').classList.add('open');
 }
@@ -252,38 +301,40 @@ function checkoutWhatsApp() {
   cart.forEach(item => {
     msg += `▪ ${item.name}`;
     if (item.color) msg += ` (color: ${item.color})`;
-    msg += ` × ${item.qty} = ${item.price * item.qty} AZN%0A`;
+    msg += ` × ${item.qty} = ${(item.price * item.qty).toFixed(2)} AZN%0A`;
   });
   const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
   msg += `%0ATotal: ${total.toFixed(2)} AZN%0A%0APlease confirm availability. Thank you! 🌸`;
   window.open(`https://wa.me/${WA_NUMBER}?text=${msg}`, '_blank');
 }
 
-function inquireProduct(id) {
-  const p = getProducts().find(x => x.id === id);
-  if (!p) return;
-  const msg = `Hello! I'm interested in: *${p.name}* — ${p.price} AZN. Is it available? 🌸`;
+function inquireProduct(id, name, price) {
+  const msg = `Hello! I'm interested in: *${name}* — ${price} AZN. Is it available? 🌸`;
   window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
-// ---- CONTACT FORM ----
+// ============================================================
+//  CONTACT FORM
+// ============================================================
 function submitInquiry(e) {
   e.preventDefault();
   const inputs = e.target.querySelectorAll('input, textarea');
-  const name = inputs[0].value;
-  const phone = inputs[1].value;
-  const msg = inputs[2].value;
+  const name = inputs[0].value, phone = inputs[1].value, msg = inputs[2].value;
   const wa = `Hello from ${name} (${phone}):%0A${encodeURIComponent(msg)}`;
   window.open(`https://wa.me/${WA_NUMBER}?text=${wa}`, '_blank');
 }
 
-// ---- MENU TOGGLE (mobile) ----
-function toggleMenu() {
-  document.getElementById('navLinks').classList.toggle('open');
-}
+// ============================================================
+//  UI HELPERS
+// ============================================================
+function toggleMenu() { document.getElementById('navLinks')?.classList.toggle('open'); }
 
-// ---- SCROLL EFFECTS ----
 window.addEventListener('scroll', () => {
-  const header = document.getElementById('header');
-  if (header) header.style.boxShadow = window.scrollY > 40 ? '0 2px 20px rgba(0,0,0,0.08)' : '';
+  const h = document.getElementById('header');
+  if (h) h.style.boxShadow = window.scrollY > 40 ? '0 2px 20px rgba(0,0,0,0.08)' : '';
 });
+
+// Spinner CSS
+const spinStyle = document.createElement('style');
+spinStyle.textContent = '@keyframes spin { to { transform: rotate(360deg); } }';
+document.head.appendChild(spinStyle);
