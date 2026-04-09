@@ -300,7 +300,7 @@
 <div class="toast" id="toast"></div>
 
 <!-- Supabase JS -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
 // ============================================================
 //  SUPABASE CONFIG (inlined to avoid path issues)
@@ -314,7 +314,9 @@ function initSupabase() {
   const statusEl = document.getElementById('dbStatus');
   if (typeof window.supabase !== 'undefined') {
     try {
-      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      // UMD build exposes createClient directly on window.supabase
+      const createClient = window.supabase.createClient || (window.supabase.default && window.supabase.default.createClient);
+      supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       // Test connection with a lightweight query
       supabase.from('products').select('id', { count: 'exact', head: true })
         .then(({ error }) => {
@@ -363,12 +365,24 @@ let formColors = [];
 
 // ---- INIT ----
 window.addEventListener('DOMContentLoaded', () => {
-  // Small delay to ensure Supabase CDN script has fully executed
-  if (typeof window.supabase !== 'undefined') {
-    initSupabase();
-  } else {
-    setTimeout(() => initSupabase(), 200);
+  // Wait for Supabase CDN to finish loading, retry a few times
+  let attempts = 0;
+  function tryInit() {
+    attempts++;
+    if (typeof window.supabase !== 'undefined' && (window.supabase.createClient || (window.supabase.default && window.supabase.default.createClient))) {
+      initSupabase();
+    } else if (attempts < 10) {
+      setTimeout(tryInit, 300);
+    } else {
+      const statusEl = document.getElementById('dbStatus');
+      if (statusEl) {
+        statusEl.style.background = '#fff0f0';
+        statusEl.style.color = '#c0392b';
+        statusEl.textContent = '❌ Supabase library failed to load (check internet)';
+      }
+    }
   }
+  tryInit();
 });
 
 // ---- AUTH ----
