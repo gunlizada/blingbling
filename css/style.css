@@ -365,6 +365,7 @@ em { font-style: italic; color: var(--pink-deep); }
 .contact-item:hover { box-shadow: var(--shadow); transform: translateX(4px); }
 .contact-item.whatsapp:hover { border-color: #25D366; }
 .contact-item.instagram:hover { border-color: var(--pink); }
+.contact-item[href*="google.com/maps"]:hover { border-color: #4285f4; }
 .contact-icon {
   width: 44px; height: 44px; border-radius: 50%;
   background: var(--pink-pale); display: flex; align-items: center; justify-content: center;
