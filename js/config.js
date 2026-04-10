@@ -18,11 +18,13 @@ const WA_NUMBER = '994702003335';
 // ============================================================
 
 // Supabase JS client (loaded via CDN in HTML files)
-let supabase;
+// The UMD bundle sets window.supabase to the library { createClient, ... }.
+// We replace it with the real client so supabase.from() / .storage work everywhere.
 function initSupabase() {
-  if (typeof window.supabase !== 'undefined') {
-    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  } else {
+  const supabaseLib = window.supabase;
+  if (!supabaseLib || typeof supabaseLib.createClient !== 'function') {
     console.error('Supabase JS not loaded. Check CDN script tag.');
+    return;
   }
+  window.supabase = supabaseLib.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 }
