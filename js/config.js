@@ -20,11 +20,21 @@ const WA_NUMBER = '994702003335';
 // Supabase JS client (loaded via CDN in HTML files)
 // The UMD bundle sets window.supabase to the library { createClient, ... }.
 // We replace it with the real client so supabase.from() / .storage work everywhere.
+//
+// IMPORTANT: Do not rely only on DOMContentLoaded. If that event already fired
+// before addEventListener runs, init would never run and window.supabase would
+// stay the library object → "supabase.from is not a function".
 function initSupabase() {
-  const supabaseLib = window.supabase;
-  if (!supabaseLib || typeof supabaseLib.createClient !== 'function') {
-    console.error('Supabase JS not loaded. Check CDN script tag.');
+  const g = window.supabase;
+  if (!g) return;
+  if (typeof g.from === 'function') return; // already the client instance
+  if (typeof g.createClient !== 'function') {
+    console.error('Supabase: expected library with createClient on window.supabase.');
     return;
   }
-  window.supabase = supabaseLib.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  window.supabase = g.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 }
+
+initSupabase();
+document.addEventListener('DOMContentLoaded', initSupabase, { once: true });
+window.addEventListener('load', initSupabase, { once: true });
