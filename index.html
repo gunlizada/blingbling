@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Bling Bling Baku — Luxury Accessories</title>
   <link rel="stylesheet" href="css/style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400;1,500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 </head>
 <body>
@@ -13,7 +13,7 @@
   <!-- HEADER -->
   <header class="header" id="header">
     <div class="header-top">
-      <span class="header-tagline">✦ Free delivery in Baku over 50 AZN ✦</span>
+      <span class="header-tagline">Free delivery in Baku on orders over 50 AZN</span>
     </div>
     <nav class="navbar">
       <a href="index.html" class="logo">
@@ -28,46 +28,51 @@
         <li><a href="index.html#contact">Contact</a></li>
       </ul>
       <div class="nav-actions">
-        <button class="icon-btn" onclick="toggleSearch()"><i class="fas fa-search"></i></button>
-        <button class="icon-btn cart-btn" onclick="toggleCart()">
+        <button type="button" class="icon-btn" aria-label="Search" onclick="toggleSearch()"><i class="fas fa-search"></i></button>
+        <button type="button" class="icon-btn cart-btn" aria-label="Shopping bag" onclick="toggleCart()">
           <i class="fas fa-shopping-bag"></i>
           <span class="cart-count" id="cartCount">0</span>
         </button>
-        <button class="icon-btn menu-toggle" id="menuToggle" onclick="toggleMenu()"><i class="fas fa-bars"></i></button>
+        <button type="button" class="icon-btn menu-toggle" id="menuToggle" aria-label="Menu" onclick="toggleMenu()"><i class="fas fa-bars"></i></button>
       </div>
     </nav>
-    <!-- Search bar -->
     <div class="search-bar" id="searchBar">
-      <input type="text" placeholder="Search for jewelry, bags, accessories…" id="searchInput" oninput="searchProducts()" />
-      <button onclick="toggleSearch()"><i class="fas fa-times"></i></button>
+      <input type="search" placeholder="Search for jewelry, bags, accessories…" id="searchInput" oninput="searchProducts()" autocomplete="off" />
+      <button type="button" aria-label="Close search" onclick="toggleSearch()"><i class="fas fa-times"></i></button>
     </div>
   </header>
 
   <!-- HERO -->
   <section class="hero">
-    <div class="hero-bg"></div>
-    <div class="hero-content">
-      <p class="hero-sub">New Collection 2025</p>
-      <h1 class="hero-title">Be Your Own<br /><em>Kind of</em> Glam</h1>
-      <p class="hero-desc">Handpicked luxury accessories delivered to your door in Baku</p>
-      <div class="hero-btns">
-        <a href="shop/shop.html" class="btn btn-primary">Shop Now</a>
-        <a href="index.html#new-arrivals" class="btn btn-outline">New Arrivals</a>
+    <div class="hero-bg hero__bg" aria-hidden="true"></div>
+    <div class="container hero__inner">
+      <div class="hero-content hero__copy">
+        <span class="hero-sub hero__eyebrow">New Collection · 2025</span>
+        <h1 class="hero-title hero__title">Be Your Own<br /><span class="hero__title-accent">Kind of</span> Glam</h1>
+        <p class="hero-desc hero__lead">Handpicked luxury accessories delivered to your door in Baku — curated with an editor’s eye for quality and polish.</p>
+        <p class="hero__meta"><span class="hero__divider" aria-hidden="true"></span> Boutique studio · Crescent Mall · WhatsApp orders</p>
+        <div class="hero-btns hero__actions">
+          <a href="shop/shop.html" class="btn btn-primary">Shop the edit</a>
+          <a href="index.html#new-arrivals" class="btn btn-outline">New arrivals</a>
+        </div>
       </div>
-    </div>
-    <div class="hero-decoration">
-      <div class="hero-circle c1"></div>
-      <div class="hero-circle c2"></div>
-      <div class="hero-circle c3"></div>
+      <aside class="hero__visual" aria-hidden="true">
+        <div class="hero__frame">
+          <div class="hero__frame-inner">
+            <span class="hero__monogram">BBB</span>
+            <p class="hero__frame-caption">Premium accessories · Baku</p>
+          </div>
+        </div>
+      </aside>
     </div>
   </section>
 
   <!-- CATEGORIES -->
-  <section class="categories">
+  <section class="categories section-block section-block--white">
     <div class="container">
       <div class="section-header">
         <h2>Shop by Category</h2>
-        <p>Find your perfect accessory</p>
+        <p>Explore a tightly edited range — each category chosen for everyday elegance.</p>
       </div>
       <div class="cat-grid" id="catGrid">
         <!-- filled by JS -->
@@ -76,56 +81,66 @@
   </section>
 
   <!-- NEW ARRIVALS -->
-  <section class="products-section" id="new-arrivals">
+  <section class="products-section section-block section-block--cream" id="new-arrivals">
     <div class="container">
       <div class="section-header">
         <h2>New Arrivals</h2>
-        <p>Fresh pieces, just landed ✦</p>
+        <p>Fresh pieces, photographed and styled with care — discover what just landed.</p>
       </div>
       <div class="filter-bar">
-        <button class="filter-btn active" onclick="filterProducts('all', this)">All</button>
-        <button class="filter-btn" onclick="filterProducts('necklaces', this)">Necklaces</button>
-        <button class="filter-btn" onclick="filterProducts('rings', this)">Rings</button>
-        <button class="filter-btn" onclick="filterProducts('earrings', this)">Earrings</button>
-        <button class="filter-btn" onclick="filterProducts('bracelets', this)">Bracelets</button>
-        <button class="filter-btn" onclick="filterProducts('bags', this)">Bags</button>
-        <button class="filter-btn" onclick="filterProducts('accessories', this)">Accessories</button>
+        <button type="button" class="filter-btn active" onclick="filterProducts('all', this)">All</button>
+        <button type="button" class="filter-btn" onclick="filterProducts('necklaces', this)">Necklaces</button>
+        <button type="button" class="filter-btn" onclick="filterProducts('rings', this)">Rings</button>
+        <button type="button" class="filter-btn" onclick="filterProducts('earrings', this)">Earrings</button>
+        <button type="button" class="filter-btn" onclick="filterProducts('bracelets', this)">Bracelets</button>
+        <button type="button" class="filter-btn" onclick="filterProducts('bags', this)">Bags</button>
+        <button type="button" class="filter-btn" onclick="filterProducts('accessories', this)">Accessories</button>
       </div>
       <div class="products-grid" id="productsGrid">
         <!-- filled by JS -->
       </div>
       <div class="center-btn">
-        <a href="shop/shop.html" class="btn btn-primary">View All Products</a>
+        <a href="shop/shop.html" class="btn btn-primary">View all products</a>
       </div>
     </div>
   </section>
 
-  <!-- BANNER -->
+  <!-- GIFT WRAPPING -->
   <section class="promo-banner">
-    <div class="promo-content">
-      <p class="promo-tag">Limited Time</p>
-      <h2>Complimentary Gift Wrapping<br />on All Orders ✦</h2>
-      <a href="shop/shop.html" class="btn btn-white">Shop the Collection</a>
+    <div class="promo-banner__grid">
+      <div class="promo-banner__col">
+        <div class="promo-content">
+          <p class="promo-tag">House service</p>
+          <h2>Complimentary gift wrapping on all orders</h2>
+          <p class="promo-banner__lead">Ribbon, tissue, and a refined presentation — so every delivery feels like unwrapping something truly considered.</p>
+          <a href="shop/shop.html" class="btn btn-outline">Shop the collection</a>
+        </div>
+      </div>
+      <div class="promo-banner__col promo-banner__col--accent">
+        <p class="promo-banner__lead">Perfect for gifting to someone special — or treating yourself. Mention a gift note when you message us on WhatsApp.</p>
+        <p class="promo-banner__note">Same careful packing for every order</p>
+      </div>
     </div>
   </section>
 
   <!-- ABOUT -->
-  <section class="about-section" id="about">
+  <section class="about-section section-block section-block--white" id="about">
     <div class="container about-grid">
       <div class="about-visual">
         <div class="about-img-frame">
           <div class="about-img-placeholder">
-            <i class="fas fa-gem"></i>
+            <i class="fas fa-gem" aria-hidden="true"></i>
           </div>
-          <div class="about-badge">✦ Baku's Finest ✦</div>
+          <div class="about-badge">Curated in Baku</div>
         </div>
       </div>
       <div class="about-text">
-        <p class="section-eyebrow">Our Story</p>
-        <h2>Where Every Piece<br />Tells a Story</h2>
-        <p>Bling Bling Baku was born from a love for beautiful things. We curate the finest jewelry and accessories so every woman in Azerbaijan can shine every day.</p>
-        <p>From delicate gold-plated necklaces to statement earrings — each piece is handpicked for quality, style, and that special sparkle.</p>
-        <a href="shop/shop.html" class="btn btn-primary">Explore Collection</a>
+        <p class="section-eyebrow">Our story</p>
+        <h2>Where every piece tells a story</h2>
+        <p>Bling Bling Baku was born from a love for beautiful things. We curate fine jewelry and accessories so every woman in Azerbaijan can shine — with pieces chosen for quality, longevity, and that quiet confidence good design brings.</p>
+        <p>From delicate gold-plated necklaces to statement earrings, each item is handpicked for craft, finish, and wearability.</p>
+        <p class="about-quote">We believe luxury is less about noise — and more about the details you keep coming back to.</p>
+        <a href="shop/shop.html" class="btn btn-primary">Explore collection</a>
       </div>
     </div>
   </section>
@@ -133,33 +148,34 @@
   <!-- INSTAGRAM STRIP -->
   <section class="insta-strip">
     <div class="container">
-      <p class="insta-label">Follow us <a href="https://www.instagram.com/blingblingbaku/" target="_blank">@blingblingbaku</a></p>
+      <p class="insta-label">Follow for new drops and styling — <a href="https://www.instagram.com/blingblingbaku/" target="_blank" rel="noopener noreferrer">@blingblingbaku</a></p>
     </div>
   </section>
 
   <!-- CONTACT -->
-  <section class="contact-section" id="contact">
+  <section class="contact-section section-block section-block--cream" id="contact">
     <div class="container contact-grid">
       <div class="contact-info">
-        <p class="section-eyebrow">Get in Touch</p>
-        <h2>We'd Love to Hear From You</h2>
+        <p class="section-eyebrow">Get in touch</p>
+        <h2>We’d love to hear from you</h2>
+        <p class="contact-trust">Questions, sizing, or a personal recommendation? Reach out directly — we typically reply on WhatsApp the same day.</p>
         <div class="contact-items">
-          <a href="https://wa.me/994702003335" target="_blank" class="contact-item whatsapp">
-            <div class="contact-icon"><i class="fab fa-whatsapp"></i></div>
+          <a href="https://wa.me/994702003335" target="_blank" rel="noopener noreferrer" class="contact-item whatsapp">
+            <div class="contact-icon"><i class="fab fa-whatsapp" aria-hidden="true"></i></div>
             <div>
               <strong>WhatsApp</strong>
               <span>+994 70 200 33 35</span>
             </div>
           </a>
-          <a href="https://www.instagram.com/blingblingbaku/" target="_blank" class="contact-item instagram">
-            <div class="contact-icon"><i class="fab fa-instagram"></i></div>
+          <a href="https://www.instagram.com/blingblingbaku/" target="_blank" rel="noopener noreferrer" class="contact-item instagram">
+            <div class="contact-icon"><i class="fab fa-instagram" aria-hidden="true"></i></div>
             <div>
               <strong>Instagram</strong>
               <span>@blingblingbaku</span>
             </div>
           </a>
           <a href="https://www.google.com/maps/search/?api=1&amp;query=Crescent%20Mall%2C%20Baku%2C%20Azerbaijan" target="_blank" rel="noopener noreferrer" class="contact-item">
-            <div class="contact-icon"><i class="fas fa-map-marker-alt"></i></div>
+            <div class="contact-icon"><i class="fas fa-map-marker-alt" aria-hidden="true"></i></div>
             <div>
               <strong>Location</strong>
               <span>Crescent Mall, 5th Floor, Baku, Azerbaijan</span>
@@ -168,12 +184,16 @@
         </div>
       </div>
       <div class="order-form-box">
-        <h3>Send an Order Inquiry</h3>
+        <h3>Order inquiry</h3>
+        <p class="order-form__sub">Share what you’re looking for — we’ll open a WhatsApp chat with your message pre-filled so you can send in one tap.</p>
         <form class="order-form" onsubmit="submitInquiry(event)">
-          <input type="text" placeholder="Your Name" required />
-          <input type="tel" placeholder="Phone / WhatsApp Number" required />
-          <textarea placeholder="Tell us what you're looking for…" rows="4"></textarea>
-          <button type="submit" class="btn btn-primary full-width">Send via WhatsApp</button>
+          <label class="visually-hidden" for="inquiry-name">Your name</label>
+          <input id="inquiry-name" type="text" name="name" placeholder="Your name" required autocomplete="name" />
+          <label class="visually-hidden" for="inquiry-phone">Phone / WhatsApp</label>
+          <input id="inquiry-phone" type="tel" name="phone" placeholder="Phone / WhatsApp number" required autocomplete="tel" />
+          <label class="visually-hidden" for="inquiry-message">Message</label>
+          <textarea id="inquiry-message" name="message" placeholder="Tell us what you’re looking for…" rows="4" required></textarea>
+          <button type="submit" class="btn btn-primary full-width">Continue on WhatsApp</button>
         </form>
       </div>
     </div>
@@ -187,43 +207,43 @@
           <span class="logo-bling">Bling Bling</span>
           <span class="logo-baku">Baku</span>
         </div>
-        <p>Luxury accessories for every occasion. Delivered with love in Baku.</p>
+        <p>Luxury accessories for every occasion. Delivered with care in Baku.</p>
         <div class="social-links">
-          <a href="https://www.instagram.com/blingblingbaku/" target="_blank"><i class="fab fa-instagram"></i></a>
-          <a href="https://wa.me/994702003335" target="_blank"><i class="fab fa-whatsapp"></i></a>
+          <a href="https://www.instagram.com/blingblingbaku/" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+          <a href="https://wa.me/994702003335" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>
         </div>
       </div>
       <div class="footer-links">
         <h4>Shop</h4>
         <ul>
-          <li><a href="shop/shop.html">All Products</a></li>
-          <li><a href="shop.html?cat=necklaces">Necklaces</a></li>
-          <li><a href="shop.html?cat=rings">Rings</a></li>
-          <li><a href="shop.html?cat=earrings">Earrings</a></li>
-          <li><a href="shop.html?cat=bags">Bags</a></li>
+          <li><a href="shop/shop.html">All products</a></li>
+          <li><a href="shop/shop.html?cat=necklaces">Necklaces</a></li>
+          <li><a href="shop/shop.html?cat=rings">Rings</a></li>
+          <li><a href="shop/shop.html?cat=earrings">Earrings</a></li>
+          <li><a href="shop/shop.html?cat=bags">Bags</a></li>
         </ul>
       </div>
       <div class="footer-links">
         <h4>Info</h4>
         <ul>
-          <li><a href="index.html#about">About Us</a></li>
+          <li><a href="index.html#about">About us</a></li>
           <li><a href="index.html#contact">Contact</a></li>
-          <li><a href="#">Shipping Info</a></li>
-          <li><a href="#">Returns</a></li>
+          <li><a href="index.html#contact">Shipping &amp; pickup</a></li>
+          <li><a href="index.html#contact">Returns</a></li>
         </ul>
       </div>
       <div class="footer-contact">
         <h4>Contact</h4>
-        <a href="https://wa.me/994702003335" target="_blank" class="footer-wa">
+        <a href="https://wa.me/994702003335" target="_blank" rel="noopener noreferrer" class="footer-wa">
           <i class="fab fa-whatsapp"></i> +994 70 200 33 35
         </a>
-        <a href="https://www.instagram.com/blingblingbaku/" target="_blank">
+        <a href="https://www.instagram.com/blingblingbaku/" target="_blank" rel="noopener noreferrer">
           <i class="fab fa-instagram"></i> @blingblingbaku
         </a>
       </div>
     </div>
     <div class="footer-bottom">
-      <p>© 2025 Bling Bling Baku. All rights reserved.</p>
+      <p>© 2026 Bling Bling Baku. All rights reserved.</p>
       <a href="admin/index.html" class="admin-link">Admin</a>
     </div>
   </footer>
@@ -232,8 +252,8 @@
   <div class="cart-overlay" id="cartOverlay" onclick="toggleCart()"></div>
   <div class="cart-drawer" id="cartDrawer">
     <div class="cart-header">
-      <h3>Your Bag</h3>
-      <button onclick="toggleCart()"><i class="fas fa-times"></i></button>
+      <h3>Your bag</h3>
+      <button type="button" aria-label="Close bag" onclick="toggleCart()"><i class="fas fa-times"></i></button>
     </div>
     <div class="cart-items" id="cartItems"></div>
     <div class="cart-footer">
@@ -241,7 +261,7 @@
         <span>Total</span>
         <span id="cartTotal">0 AZN</span>
       </div>
-      <button class="btn btn-primary full-width" onclick="checkoutWhatsApp()">
+      <button type="button" class="btn btn-primary full-width" onclick="checkoutWhatsApp()">
         <i class="fab fa-whatsapp"></i> Order via WhatsApp
       </button>
     </div>
@@ -250,18 +270,16 @@
   <!-- PRODUCT MODAL -->
   <div class="modal-overlay" id="modalOverlay" onclick="closeModal()"></div>
   <div class="product-modal" id="productModal">
-    <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
+    <button type="button" class="modal-close" aria-label="Close" onclick="closeModal()"><i class="fas fa-times"></i></button>
     <div class="modal-body" id="modalBody"></div>
   </div>
 
   <!-- FLOATING WHATSAPP -->
-  <a href="https://wa.me/994702003335" target="_blank" class="float-wa">
+  <a href="https://wa.me/994702003335" target="_blank" rel="noopener noreferrer" class="float-wa" aria-label="Chat on WhatsApp">
     <i class="fab fa-whatsapp"></i>
   </a>
 
-  <!-- Supabase JS Client -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-  <!-- Site scripts -->
   <script src="js/config.js"></script>
   <script src="js/products.js"></script>
   <script src="js/main.js"></script>
