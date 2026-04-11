@@ -22,9 +22,12 @@ function renderCategories() {
   const el = document.getElementById('catGrid');
   if (!el) return;
   el.innerHTML = getCategories().map(c => `
-    <div class="cat-card" onclick="window.location.href='shop/shop.html?cat=${c.key}'">
-      <div class="cat-icon"><i class="${c.icon}"></i></div>
-      <p>${c.label}</p>
+    <div class="cat-card" role="link" tabindex="0" onclick="window.location.href='shop/shop.html?cat=${c.key}'" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.location.href='shop/shop.html?cat=${c.key}';}">
+      <div class="cat-card__surface">
+        <span class="cat-card__icon" aria-hidden="true"><i class="${c.icon}"></i></span>
+        <span class="cat-card__name">${c.label}</span>
+        <span class="cat-card__hint">View edit</span>
+      </div>
     </div>`).join('');
 }
 
@@ -318,10 +321,12 @@ function inquireProduct(id, name, price) {
 // ============================================================
 function submitInquiry(e) {
   e.preventDefault();
-  const inputs = e.target.querySelectorAll('input, textarea');
-  const name = inputs[0].value, phone = inputs[1].value, msg = inputs[2].value;
-  const wa = `Hello from ${name} (${phone}):%0A${encodeURIComponent(msg)}`;
-  window.open(`https://wa.me/${WA_NUMBER}?text=${wa}`, '_blank');
+  const form = e.target;
+  const name = form.querySelector('[name="name"]')?.value?.trim() || '';
+  const phone = form.querySelector('[name="phone"]')?.value?.trim() || '';
+  const msg = form.querySelector('[name="message"]')?.value?.trim() || '';
+  const text = `Hello Bling Bling Baku,\n\nName: ${name}\nPhone: ${phone}\n\n${msg}`;
+  window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(text)}`, '_blank');
 }
 
 // ============================================================
