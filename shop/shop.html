@@ -5,14 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Shop — Bling Bling Baku</title>
   <link rel="stylesheet" href="../css/style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400;1,500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 </head>
 <body>
 
   <header class="header" id="header">
     <div class="header-top">
-      <span class="header-tagline">✦ Free delivery in Baku over 50 AZN ✦</span>
+      <span class="header-tagline">Free delivery in Baku on orders over 50 AZN</span>
     </div>
     <nav class="navbar">
       <a href="../index.html" class="logo">
@@ -27,26 +27,27 @@
         <li><a href="../index.html#contact">Contact</a></li>
       </ul>
       <div class="nav-actions">
-        <button class="icon-btn" onclick="toggleSearch()"><i class="fas fa-search"></i></button>
-        <button class="icon-btn cart-btn" onclick="toggleCart()">
+        <button type="button" class="icon-btn" aria-label="Search" onclick="toggleSearch()"><i class="fas fa-search"></i></button>
+        <button type="button" class="icon-btn cart-btn" aria-label="Shopping bag" onclick="toggleCart()">
           <i class="fas fa-shopping-bag"></i>
           <span class="cart-count" id="cartCount">0</span>
         </button>
-        <button class="icon-btn menu-toggle" id="menuToggle" onclick="toggleMenu()"><i class="fas fa-bars"></i></button>
+        <button type="button" class="icon-btn menu-toggle" id="menuToggle" aria-label="Menu" onclick="toggleMenu()"><i class="fas fa-bars"></i></button>
       </div>
     </nav>
     <div class="search-bar" id="searchBar">
-      <input type="text" placeholder="Search for jewelry, bags, accessories…" id="searchInput" oninput="searchProducts()" />
-      <button onclick="toggleSearch()"><i class="fas fa-times"></i></button>
+      <input type="search" placeholder="Search for jewelry, bags, accessories…" id="searchInput" oninput="searchProducts()" autocomplete="off" />
+      <button type="button" aria-label="Close search" onclick="toggleSearch()"><i class="fas fa-times"></i></button>
     </div>
   </header>
 
   <div class="page-hero small">
-    <h1>Shop All</h1>
-    <p>Discover our full collection</p>
+    <span class="page-hero__eyebrow">The collection</span>
+    <h1>Shop all</h1>
+    <p>Browse the full edit — filter by category, price, and sort order.</p>
   </div>
 
-  <section class="shop-section">
+  <section class="shop-section section-block section-block--white">
     <div class="container shop-layout">
       <!-- Sidebar -->
       <aside class="shop-sidebar">
@@ -121,7 +122,7 @@
       </div>
     </div>
     <div class="footer-bottom">
-      <p>© 2025 Bling Bling Baku. All rights reserved.</p>
+      <p>© 2026 Bling Bling Baku. All rights reserved.</p>
       <a href="../admin/index.html" class="admin-link">Admin</a>
     </div>
   </footer>
@@ -129,8 +130,8 @@
   <div class="cart-overlay" id="cartOverlay" onclick="toggleCart()"></div>
   <div class="cart-drawer" id="cartDrawer">
     <div class="cart-header">
-      <h3>Your Bag</h3>
-      <button onclick="toggleCart()"><i class="fas fa-times"></i></button>
+      <h3>Your bag</h3>
+      <button type="button" aria-label="Close bag" onclick="toggleCart()"><i class="fas fa-times"></i></button>
     </div>
     <div class="cart-items" id="cartItems"></div>
     <div class="cart-footer">
@@ -138,7 +139,7 @@
         <span>Total</span>
         <span id="cartTotal">0 AZN</span>
       </div>
-      <button class="btn btn-primary full-width" onclick="checkoutWhatsApp()">
+      <button type="button" class="btn btn-primary full-width" onclick="checkoutWhatsApp()">
         <i class="fab fa-whatsapp"></i> Order via WhatsApp
       </button>
     </div>
@@ -146,11 +147,11 @@
 
   <div class="modal-overlay" id="modalOverlay" onclick="closeModal()"></div>
   <div class="product-modal" id="productModal">
-    <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
+    <button type="button" class="modal-close" aria-label="Close" onclick="closeModal()"><i class="fas fa-times"></i></button>
     <div class="modal-body" id="modalBody"></div>
   </div>
 
-  <a href="https://wa.me/994702003335" target="_blank" class="float-wa">
+  <a href="https://wa.me/994702003335" target="_blank" rel="noopener noreferrer" class="float-wa" aria-label="Chat on WhatsApp">
     <i class="fab fa-whatsapp"></i>
   </a>
 
