@@ -93,19 +93,20 @@ function productCard(p) {
   const oos      = isOutOfStock ? `<div class="out-of-stock-badge">Sold Out</div>` : '';
   const oldPrice = p.old_price ? `<span class="old-price">${p.old_price} AZN</span>` : '';
   return `
-  <div class="product-card" onclick="openModal('${p.id}')">
+  <article class="product-card" onclick="openModal('${p.id}')">
     <div class="product-img">${imgContent}${badge}${oos}
       <div class="product-actions">
-        <button title="Quick view" onclick="event.stopPropagation();openModal('${p.id}')"><i class="fas fa-eye"></i></button>
-        ${!isOutOfStock ? `<button title="Add to bag" onclick="event.stopPropagation();addToCart('${p.id}')"><i class="fas fa-shopping-bag"></i></button>` : ''}
-        <button title="WhatsApp" onclick="event.stopPropagation();inquireProduct('${p.id}','${p.name.replace(/'/g,"\\'")}',${p.price})"><i class="fab fa-whatsapp"></i></button>
+        <button type="button" title="Quick view" onclick="event.stopPropagation();openModal('${p.id}')"><i class="fas fa-eye"></i></button>
+        ${!isOutOfStock ? `<button type="button" title="Add to bag" onclick="event.stopPropagation();addToCart('${p.id}')"><i class="fas fa-shopping-bag"></i></button>` : ''}
+        <button type="button" title="WhatsApp" onclick="event.stopPropagation();inquireProduct('${p.id}','${p.name.replace(/'/g,"\\'")}',${p.price})"><i class="fab fa-whatsapp"></i></button>
       </div>
     </div>
     <div class="product-info">
       <div class="product-cat">${p.category}</div>
-      <div class="product-name">${p.name}</div>
+      <h3 class="product-name">${p.name}</h3>
       <div class="product-price">${oldPrice}${p.price} AZN</div>
       ${colorDots}
+      <span class="product-cta">View piece</span>
     </div>
-  </div>`;
+  </article>`;
 }
