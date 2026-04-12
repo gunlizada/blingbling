@@ -307,7 +307,6 @@
 // ============================================================
 
 // Admin credentials (change these!)
-const ADMIN_CREDS = { user: 'emiliabling', pass: 'gunemi!@#BBB' };
 
 let allProducts = [];   // full list from DB
 let filtered   = [];    // after search/filter
@@ -321,17 +320,17 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 // ---- AUTH ----
-function doLogin() {
-  const u = document.getElementById('loginUser').value.trim();
-  const p = document.getElementById('loginPass').value;
-  if (u === ADMIN_CREDS.user && p === ADMIN_CREDS.pass) {
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('adminApp').style.display = 'block';
-    loadDashboard();
-    loadProductsPage();
-  } else {
+async function doLogin() {
+  const email = document.getElementById('loginUser').value.trim();
+  const pass  = document.getElementById('loginPass').value;
+  const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
+  if (error) {
     document.getElementById('loginError').style.display = 'block';
+    return;
   }
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('adminApp').style.display = 'block';
+  loadDashboard();
 }
 function doLogout() {
   document.getElementById('loginScreen').style.display = 'flex';
