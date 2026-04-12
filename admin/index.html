@@ -145,7 +145,7 @@
   <div class="login-box">
     <div class="login-logo">Bling Bling Baku</div>
     <div class="login-sub">Admin Panel</div>
-    <input type="text" id="loginUser" placeholder="Username" />
+    <input type="email" id="loginUser" placeholder="Email" autocomplete="email" />
     <input type="password" id="loginPass" placeholder="Password" onkeypress="if(event.key==='Enter')doLogin()" />
     <button class="btn-login" onclick="doLogin()">Sign In</button>
     <p class="login-error" id="loginError">Incorrect username or password</p>
@@ -306,8 +306,6 @@
 //  ADMIN LOGIC — Supabase powered
 // ============================================================
 
-// Admin credentials (change these!)
-
 let allProducts = [];   // full list from DB
 let filtered   = [];    // after search/filter
 let editingId  = null;
@@ -317,22 +315,38 @@ let formColors = [];
 // ---- INIT ----
 window.addEventListener('DOMContentLoaded', () => {
   initSupabase();
+  // If already logged in, skip login screen
+  const session = window.supabase?.auth?.getSession?.();
+  supabase.auth.getSession().then(({ data: { session } }) => {
+    if (session) {
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('adminApp').style.display = 'block';
+      loadDashboard();
+      loadProductsPage();
+    }
+  });
 });
 
 // ---- AUTH ----
 async function doLogin() {
   const email = document.getElementById('loginUser').value.trim();
   const pass  = document.getElementById('loginPass').value;
+  const errEl = document.getElementById('loginError');
+  errEl.style.display = 'none';
+
   const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
   if (error) {
-    document.getElementById('loginError').style.display = 'block';
+    errEl.style.display = 'block';
+    errEl.textContent = 'Incorrect email or password';
     return;
   }
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('adminApp').style.display = 'block';
   loadDashboard();
+  loadProductsPage();
 }
-function doLogout() {
+async function doLogout() {
+  await supabase.auth.signOut();
   document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('adminApp').style.display = 'none';
   document.getElementById('loginUser').value = '';
