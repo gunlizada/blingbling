@@ -325,7 +325,7 @@ function addToCartFromModal() {
     diamond: personalization.diamond,
     diamondHex: personalization.diamondHex,
     engraving: personalization.engraving
-  });
+  }, p.quantity || 99);
   _modalQty = 1;
   closeModal();
 }
@@ -343,10 +343,10 @@ function addToCart(id) {
     diamond: null,
     diamondHex: null,
     engraving: ''
-  });
+  }, p.quantity);
 }
 
-function addToCartItem(id, name, price, image, qty, personalization = {}) {
+function addToCartItem(id, name, price, image, qty, personalization = {}, stock = 99) {
   const normalizedPersonalization = {
     color: personalization.color || null,
     colorLabel: personalization.colorLabel || null,
@@ -361,13 +361,14 @@ function addToCartItem(id, name, price, image, qty, personalization = {}) {
       i.diamond === normalizedPersonalization.diamond &&
       i.engraving === normalizedPersonalization.engraving
   );
-  if (existing) { existing.qty += qty; }
+  if (existing) { existing.qty = Math.min(existing.stock || stock, existing.qty + qty); }
   else {
     cart.push({
       id: String(id),
       name,
       price,
-      qty,
+      qty: Math.min(stock, qty),
+      stock,
       color: normalizedPersonalization.color,
       colorLabel: normalizedPersonalization.colorLabel,
       diamond: normalizedPersonalization.diamond,
@@ -409,9 +410,9 @@ function renderCartItems() {
           ` : ''}
           <div class="cart-item-price">${(item.price * item.qty).toFixed(2)} AZN</div>
           <div class="cart-item-controls">
-            <button class="qty-btn" onclick="updateCartQty(${idx},-1)">−</button>
+            <button class="qty-btn" onclick="updateCartQty(${idx},-1)" ${item.qty <= 1 ? 'disabled' : ''}>−</button>
             <span class="qty-val">${item.qty}</span>
-            <button class="qty-btn" onclick="updateCartQty(${idx},1)">+</button>
+            <button class="qty-btn" onclick="updateCartQty(${idx},1)" ${item.qty >= (item.stock || 99) ? 'disabled' : ''}>+</button>
           </div>
         </div>
         <button class="cart-item-remove" onclick="removeFromCart(${idx})"><i class="fas fa-trash-alt"></i></button>
@@ -423,7 +424,9 @@ function renderCartItems() {
 }
 
 function updateCartQty(idx, delta) {
-  cart[idx].qty = Math.max(1, cart[idx].qty + delta);
+  const item = cart[idx];
+  const max = item.stock || 99;
+  item.qty = Math.max(1, Math.min(max, item.qty + delta));
   localStorage.setItem('bbb_cart', JSON.stringify(cart));
   updateCartBadge(); renderCartItems();
 }
