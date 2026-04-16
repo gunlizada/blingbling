@@ -24,8 +24,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   initSupabase();
   updateCartBadge();
   renderCategories();
+  initScrollReveal(); // init observer early — section elements exist at this point
   await loadAndRenderHome();
-  initScrollReveal();
 });
 
 // ============================================================
@@ -42,6 +42,8 @@ function renderCategories() {
         <span class="cat-card__hint">View edit</span>
       </div>
     </div>`).join('');
+  // Reveal cat cards after they're in the DOM
+  requestAnimationFrame(() => revealGridItems('#catGrid .cat-card'));
 }
 
 // ============================================================
@@ -59,6 +61,8 @@ function renderProductGrid(grid, products) {
   grid.innerHTML = products.length
     ? products.map(p => productCard(p)).join('')
     : '<p class="no-products" style="grid-column:1/-1;text-align:center;padding:60px;color:var(--text-light)">No products yet. Check back soon! ✦</p>';
+  // Reveal product cards after they're in the DOM
+  requestAnimationFrame(() => revealGridItems('#productsGrid .product-card, #shopGrid .product-card'));
 }
 
 function loadingHTML() {
@@ -495,27 +499,48 @@ function submitInquiry(e) {
 // ============================================================
 function toggleMenu() { document.getElementById('navLinks')?.classList.toggle('open'); }
 
+// ============================================================
+//  SCROLL REVEAL — proper implementation
+// ============================================================
+let _scrollObserver = null;
+
 function initScrollReveal() {
-  const targets = document.querySelectorAll(
-    '.hero, .section-header, .cat-card, .product-card, .promo-banner, .about-grid, .contact-grid, .shop-sidebar, .shop-main, .footer-grid, .insta-strip, .page-hero.small'
+  // Section-level elements (not dynamically rendered)
+  const sectionTargets = document.querySelectorAll(
+    '.section-header, .promo-banner, .about-grid, .contact-grid, .footer-grid, .insta-strip, .page-hero.small'
   );
-  if (!targets.length) return;
 
-  targets.forEach(el => el.classList.add('reveal-on-scroll'));
-
-  const observer = new IntersectionObserver(
+  _scrollObserver = new IntersectionObserver(
     entries => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
           entry.target.classList.add('revealed');
-          observer.unobserve(entry.target);
+          _scrollObserver.unobserve(entry.target);
         }
       });
     },
-    { threshold: 0.12, rootMargin: '0px 0px -40px 0px' }
+    { threshold: 0.05, rootMargin: '0px 0px -30px 0px' }
   );
 
-  targets.forEach(el => observer.observe(el));
+  sectionTargets.forEach(el => {
+    if (el.classList.contains('section-header')) el.classList.add('reveal-header');
+    el.classList.add('reveal-on-scroll');
+    _scrollObserver.observe(el);
+  });
+}
+
+// Called after dynamic content (product cards, cat cards) is rendered
+function revealGridItems(containerSelector) {
+  if (!_scrollObserver) return;
+  const items = document.querySelectorAll(containerSelector);
+  items.forEach((el, i) => {
+    if (el.classList.contains('reveal-on-scroll')) return; // already observed
+    el.classList.add('reveal-on-scroll');
+    // Stagger: cycle through delay classes 1-6
+    const delayClass = `reveal-delay-${(i % 6) + 1}`;
+    el.classList.add(delayClass);
+    _scrollObserver.observe(el);
+  });
 }
 
 window.addEventListener('scroll', () => {
