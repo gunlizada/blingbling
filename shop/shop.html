@@ -163,6 +163,7 @@
     // Shop-specific init
     // getProducts() is async (Supabase). Must await — calling getProducts().filter throws and shows no products.
     window.addEventListener('DOMContentLoaded', async () => {
+      initScrollReveal(); // init observer for section-level elements
       productCache = await getProducts();
       const urlParams = new URLSearchParams(window.location.search);
       const cat = urlParams.get('cat');
@@ -202,6 +203,8 @@
       else filtered.sort((a,b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
       document.getElementById('productCount').textContent = `${filtered.length} Products`;
       grid.innerHTML = filtered.length ? filtered.map(p => productCard(p)).join('') : '<p class="no-products">No products found.</p>';
+      // Reveal product cards after render
+      requestAnimationFrame(() => revealGridItems('#shopGrid .product-card'));
     }
 
     function filterByPrice(val) {
