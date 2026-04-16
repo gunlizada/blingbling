@@ -4,6 +4,18 @@
 
 let cart = JSON.parse(localStorage.getItem('bbb_cart') || '[]');
 let productCache = []; // in-memory cache after first load
+const PERSONALIZATION_DIAMOND_COLORS = [
+  { name: 'White', hex: '#f4f4f4' },
+  { name: 'Black', hex: '#24242c' },
+  { name: 'Sky Blue', hex: '#74ccff' },
+  { name: 'Emerald', hex: '#2ea57d' },
+  { name: 'Lavender', hex: '#cdbdff' },
+  { name: 'Pink', hex: '#f05f95' },
+  { name: 'Ruby', hex: '#ff4d6d' },
+  { name: 'Honey', hex: '#f4b338' },
+  { name: 'Olive', hex: '#93a63f' },
+  { name: 'Sapphire', hex: '#2f4fa6' }
+];
 
 // ============================================================
 //  INIT
@@ -60,6 +72,21 @@ function loadingHTML() {
         <div style="height:14px;background:var(--pink-pale);border-radius:6px;width:40%"></div>
       </div>
     </div>`).join('');
+}
+
+function colorLabel(hex, fallback = 'Custom tone') {
+  if (!hex) return fallback;
+  const normalized = String(hex).toLowerCase();
+  const map = {
+    '#d4af37': 'Gold',
+    '#c0c0c0': 'Silver',
+    '#b76e79': 'Rose Gold',
+    '#ffd700': 'Gold',
+    '#f1c27d': 'Champagne',
+    '#ffffff': 'White',
+    '#000000': 'Black'
+  };
+  return map[normalized] || fallback;
 }
 
 // ============================================================
@@ -139,39 +166,38 @@ async function openModal(id) {
         <div class="modal-thumb ${i===0?'active':''}" onclick="switchModalImg(${i}, this, ${JSON.stringify(images).replace(/"/g,'&quot;')})">
           <img src="${img}" alt="" /></div>`).join('') : '';
 
-  const colorBtns = colors.map((c, i) => `
-    <button class="modal-color-btn ${i===0?'selected':''}" style="background:${c}"
-      onclick="selectModalColor(this)" title="${c}"></button>`).join('');
+  const chainColorBtns = colors.map((c, i) => `
+    <button
+      class="modal-color-btn ${i===0?'selected':''}"
+      style="background:${c}"
+      data-color="${c}"
+      data-color-label="${colorLabel(c)}"
+      onclick="selectModalColor(this)"
+      title="${colorLabel(c)}"
+      aria-label="${colorLabel(c)}"
+    ></button>`).join('');
+
+  const diamondColorBtns = PERSONALIZATION_DIAMOND_COLORS.map((c, i) => `
+    <button
+      class="modal-color-btn modal-color-btn--diamond ${i===0?'selected':''}"
+      style="background:${c.hex}"
+      data-diamond-color="${c.name}"
+      data-diamond-hex="${c.hex}"
+      onclick="selectDiamondColor(this)"
+      title="${c.name}"
+      aria-label="${c.name}"
+    ></button>`).join('');
 
   const oldPrice = p.old_price ? `<span class="old-price" style="text-decoration:line-through;color:var(--text-light);font-size:1rem;margin-right:8px">${p.old_price} AZN</span>` : '';
 
-  // Engraving: show for necklaces, bracelets, rings, or if product name/desc mentions personali/engrav/custom
-  const engravCategories = ['necklaces','bracelets','rings','accessories'];
-  const engravKeywords = /personali|engrav|custom|name|initial/i;
-  const showEngraving = engravCategories.includes((p.category||'').toLowerCase())
-    || engravKeywords.test(p.name + ' ' + (p.description||''));
-
-  const engravingField = showEngraving ? `
-    <div class="modal-engraving">
-      <h5><i class="fas fa-pen-nib" style="font-size:0.75rem;margin-right:6px;color:var(--pink-deep)"></i>Personalization <span class="engrave-optional">optional</span></h5>
-      <div class="engrave-input-wrap">
-        <input
-          type="text"
-          id="modalEngravingInput"
-          class="engrave-input"
-          maxlength="10"
-          placeholder="e.g. AMAYA ✦"
-          oninput="updateEngraveCounter(this)"
-          autocomplete="off"
-          spellcheck="false"
-        />
-        <span class="engrave-counter"><span id="engraveCount">0</span>/10</span>
-      </div>
-      <p class="engrave-hint">Letters &amp; numbers only · 10 characters max · No accents</p>
-    </div>` : '';
-
   // Store product data on modal for cart use
-  document.getElementById('productModal').dataset.product = JSON.stringify({ id: p.id, name: p.name, price: p.price, image: images[0] || null, quantity: p.quantity, showEngraving });
+  document.getElementById('productModal').dataset.product = JSON.stringify({
+    id: p.id,
+    name: p.name,
+    price: p.price,
+    image: images[0] || null,
+    quantity: p.quantity
+  });
 
   document.getElementById('modalBody').innerHTML = `
     <div class="modal-gallery">
@@ -183,8 +209,30 @@ async function openModal(id) {
       <div class="modal-name">${p.name}</div>
       <div class="modal-price">${oldPrice}${p.price} AZN</div>
       <p class="modal-desc">${p.description || ''}</p>
-      ${colorBtns ? `<div class="modal-colors"><h5>Color</h5><div class="modal-color-opts">${colorBtns}</div></div>` : ''}
-      ${engravingField}
+      <div class="modal-personalize">
+        <div class="modal-personalize-note">
+          <i class="fas fa-stars" aria-hidden="true"></i>
+          <span>Personalized piece prepared specially for you</span>
+        </div>
+        <div class="modal-engraving">
+          <h5>Engraving (10 characters max)</h5>
+          <input
+            id="modalEngraving"
+            class="modal-engraving-input"
+            type="text"
+            maxlength="10"
+            placeholder="AMAYA"
+            oninput="updateEngravingCounter()"
+          />
+          <p class="modal-engraving-help">Letters, numbers, and emojis are supported.</p>
+          <span class="modal-engraving-counter" id="modalEngravingCounter">0 / 10</span>
+        </div>
+        ${chainColorBtns ? `<div class="modal-colors"><h5>Chain Color</h5><div class="modal-color-opts">${chainColorBtns}</div></div>` : ''}
+        <div class="modal-colors">
+          <h5>Diamond Color</h5>
+          <div class="modal-color-opts">${diamondColorBtns}</div>
+        </div>
+      </div>
       <div class="modal-qty">
         <h5>Quantity</h5>
         <div class="modal-qty-controls">
@@ -199,18 +247,11 @@ async function openModal(id) {
       </p>
       <div class="modal-actions">
         ${!isOutOfStock ? `<button class="btn btn-primary" onclick="addToCartFromModal()"><i class="fas fa-shopping-bag"></i> Add to Bag</button>` : ''}
-        <button class="btn btn-outline" onclick="inquireProductWithEngraving('${p.id}','${p.name.replace(/'/g,"\\'")}',${p.price})">
+        <button class="btn btn-outline" onclick="inquireProduct('${p.id}','${p.name.replace(/'/g,"\\'")}',${p.price})">
           <i class="fab fa-whatsapp"></i> Ask on WhatsApp
         </button>
       </div>
     </div>`;
-}
-
-function updateEngraveCounter(input) {
-  // Strip disallowed characters live
-  input.value = input.value.replace(/[^a-zA-Z0-9\s✦♡★]/g, '');
-  const count = document.getElementById('engraveCount');
-  if (count) count.textContent = input.value.length;
 }
 
 function closeModal() {
@@ -226,8 +267,21 @@ function switchModalImg(i, thumb, images) {
 }
 
 function selectModalColor(btn) {
-  document.querySelectorAll('.modal-color-btn').forEach(b => b.classList.remove('selected'));
+  document.querySelectorAll('.modal-color-btn:not(.modal-color-btn--diamond)').forEach(b => b.classList.remove('selected'));
   btn.classList.add('selected');
+}
+
+function selectDiamondColor(btn) {
+  document.querySelectorAll('.modal-color-btn--diamond').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+
+function updateEngravingCounter() {
+  const input = document.getElementById('modalEngraving');
+  const counter = document.getElementById('modalEngravingCounter');
+  if (!input || !counter) return;
+  const val = input.value || '';
+  counter.textContent = `${val.length} / 10`;
 }
 
 let _modalQty = 1;
@@ -244,25 +298,23 @@ function addToCartFromModal() {
   const modal = document.getElementById('productModal');
   const p = modal.dataset.product ? JSON.parse(modal.dataset.product) : null;
   if (!p) return;
-  const selectedColor = document.querySelector('.modal-color-btn.selected');
-  const color = selectedColor ? selectedColor.style.background : null;
-  const engravingEl = document.getElementById('modalEngravingInput');
-  const engraving = engravingEl ? engravingEl.value.trim() : null;
-  addToCartItem(p.id, p.name, p.price, p.image, _modalQty, color, engraving);
+  const selectedColor = document.querySelector('.modal-color-btn.selected:not(.modal-color-btn--diamond)');
+  const selectedDiamond = document.querySelector('.modal-color-btn--diamond.selected');
+  const engravingInput = document.getElementById('modalEngraving');
+  const engraving = (engravingInput?.value || '').trim();
+  const color = selectedColor ? selectedColor.dataset.color || selectedColor.style.background : null;
+  const colorLabelText = selectedColor ? selectedColor.dataset.colorLabel || colorLabel(color) : null;
+  const diamond = selectedDiamond ? selectedDiamond.dataset.diamondColor || null : null;
+  const diamondHex = selectedDiamond ? selectedDiamond.dataset.diamondHex || null : null;
+  addToCartItem(p.id, p.name, p.price, p.image, _modalQty, {
+    color,
+    colorLabel: colorLabelText,
+    diamond,
+    diamondHex,
+    engraving
+  });
   _modalQty = 1;
   closeModal();
-}
-
-function inquireProductWithEngraving(id, name, price) {
-  const engravingEl = document.getElementById('modalEngravingInput');
-  const engraving = engravingEl ? engravingEl.value.trim() : '';
-  const selectedColor = document.querySelector('.modal-color-btn.selected');
-  const color = selectedColor ? selectedColor.title : '';
-  let msg = `Hello! I'm interested in: *${name}* — ${price} AZN.`;
-  if (engraving) msg += `\n✦ Engraving: *${engraving}*`;
-  if (color) msg += `\n🎨 Color: ${color}`;
-  msg += `\nIs it available? 🌸`;
-  window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
 // ============================================================
@@ -272,13 +324,45 @@ function addToCart(id) {
   const p = productCache.find(x => String(x.id) === String(id));
   if (!p) return;
   const images = Array.isArray(p.images) ? p.images : [];
-  addToCartItem(p.id, p.name, p.price, images[0] || null, 1, null);
+  addToCartItem(p.id, p.name, p.price, images[0] || null, 1, {
+    color: null,
+    colorLabel: null,
+    diamond: null,
+    diamondHex: null,
+    engraving: ''
+  });
 }
 
-function addToCartItem(id, name, price, image, qty, color, engraving) {
-  const existing = cart.find(i => String(i.id) === String(id) && i.color === color && i.engraving === (engraving||null));
+function addToCartItem(id, name, price, image, qty, personalization = {}) {
+  const normalizedPersonalization = {
+    color: personalization.color || null,
+    colorLabel: personalization.colorLabel || null,
+    diamond: personalization.diamond || null,
+    diamondHex: personalization.diamondHex || null,
+    engraving: personalization.engraving || ''
+  };
+  const existing = cart.find(
+    i =>
+      String(i.id) === String(id) &&
+      i.color === normalizedPersonalization.color &&
+      i.diamond === normalizedPersonalization.diamond &&
+      i.engraving === normalizedPersonalization.engraving
+  );
   if (existing) { existing.qty += qty; }
-  else { cart.push({ id: String(id), name, price, qty, color, image, engraving: engraving || null }); }
+  else {
+    cart.push({
+      id: String(id),
+      name,
+      price,
+      qty,
+      color: normalizedPersonalization.color,
+      colorLabel: normalizedPersonalization.colorLabel,
+      diamond: normalizedPersonalization.diamond,
+      diamondHex: normalizedPersonalization.diamondHex,
+      engraving: normalizedPersonalization.engraving,
+      image
+    });
+  }
   localStorage.setItem('bbb_cart', JSON.stringify(cart));
   updateCartBadge();
   renderCartItems();
@@ -303,8 +387,13 @@ function renderCartItems() {
         </div>
         <div class="cart-item-info">
           <div class="cart-item-name">${item.name}</div>
-          ${item.color ? `<div style="display:flex;align-items:center;gap:6px;margin:4px 0"><span style="width:12px;height:12px;border-radius:50%;background:${item.color};display:inline-block;border:1px solid #eee"></span></div>` : ''}
-          ${item.engraving ? `<div class="cart-engraving-tag"><i class="fas fa-pen-nib"></i> ${item.engraving}</div>` : ''}
+          ${(item.color || item.diamond || item.engraving) ? `
+            <div class="cart-item-personalization">
+              ${item.engraving ? `<span class="cart-personal-chip">Engraving: ${item.engraving}</span>` : ''}
+              ${item.color ? `<span class="cart-personal-chip"><span class="cart-personal-dot" style="background:${item.color}"></span>Chain: ${item.colorLabel || 'Custom'}</span>` : ''}
+              ${item.diamond ? `<span class="cart-personal-chip"><span class="cart-personal-dot" style="background:${item.diamondHex || '#f4f4f4'}"></span>Diamond: ${item.diamond}</span>` : ''}
+            </div>
+          ` : ''}
           <div class="cart-item-price">${(item.price * item.qty).toFixed(2)} AZN</div>
           <div class="cart-item-controls">
             <button class="qty-btn" onclick="updateCartQty(${idx},-1)">−</button>
@@ -351,8 +440,9 @@ function checkoutWhatsApp() {
   let msg = `Hello! I'd like to order from Bling Bling Baku:%0A%0A`;
   cart.forEach(item => {
     msg += `▪ ${item.name}`;
-    if (item.color) msg += ` (color: ${item.color})`;
-    if (item.engraving) msg += ` ✦ engraving: "${item.engraving}"`;
+    if (item.engraving) msg += ` (engraving: ${item.engraving})`;
+    if (item.colorLabel) msg += ` (chain: ${item.colorLabel})`;
+    if (item.diamond) msg += ` (diamond: ${item.diamond})`;
     msg += ` × ${item.qty} = ${(item.price * item.qty).toFixed(2)} AZN%0A`;
   });
   const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
