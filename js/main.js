@@ -25,6 +25,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   updateCartBadge();
   renderCategories();
   await loadAndRenderHome();
+  initScrollReveal();
 });
 
 // ============================================================
@@ -221,7 +222,7 @@ async function openModal(id) {
             class="modal-engraving-input"
             type="text"
             maxlength="10"
-            placeholder="EMILIA"
+            placeholder="AMAYA"
             oninput="updateEngravingCounter()"
           />
           <p class="modal-engraving-help">Letters, numbers, and emojis are supported.</p>
@@ -247,7 +248,7 @@ async function openModal(id) {
       </p>
       <div class="modal-actions">
         ${!isOutOfStock ? `<button class="btn btn-primary" onclick="addToCartFromModal()"><i class="fas fa-shopping-bag"></i> Add to Bag</button>` : ''}
-        <button class="btn btn-outline" onclick="inquireProduct('${p.id}','${p.name.replace(/'/g,"\\'")}',${p.price})">
+        <button class="btn btn-outline" onclick="inquireProductFromModal()">
           <i class="fab fa-whatsapp"></i> Ask on WhatsApp
         </button>
       </div>
@@ -280,8 +281,23 @@ function updateEngravingCounter() {
   const input = document.getElementById('modalEngraving');
   const counter = document.getElementById('modalEngravingCounter');
   if (!input || !counter) return;
+  // Keep engraving style consistent and premium-looking.
+  input.value = (input.value || '').toUpperCase();
   const val = input.value || '';
   counter.textContent = `${val.length} / 10`;
+}
+
+function getSelectedModalPersonalization() {
+  const selectedColor = document.querySelector('.modal-color-btn.selected:not(.modal-color-btn--diamond)');
+  const selectedDiamond = document.querySelector('.modal-color-btn--diamond.selected');
+  const engravingInput = document.getElementById('modalEngraving');
+  return {
+    color: selectedColor ? selectedColor.dataset.color || selectedColor.style.background : null,
+    colorLabel: selectedColor ? selectedColor.dataset.colorLabel || colorLabel(selectedColor.dataset.color || selectedColor.style.background) : null,
+    diamond: selectedDiamond ? selectedDiamond.dataset.diamondColor || null : null,
+    diamondHex: selectedDiamond ? selectedDiamond.dataset.diamondHex || null : null,
+    engraving: (engravingInput?.value || '').trim().toUpperCase()
+  };
 }
 
 let _modalQty = 1;
@@ -298,20 +314,13 @@ function addToCartFromModal() {
   const modal = document.getElementById('productModal');
   const p = modal.dataset.product ? JSON.parse(modal.dataset.product) : null;
   if (!p) return;
-  const selectedColor = document.querySelector('.modal-color-btn.selected:not(.modal-color-btn--diamond)');
-  const selectedDiamond = document.querySelector('.modal-color-btn--diamond.selected');
-  const engravingInput = document.getElementById('modalEngraving');
-  const engraving = (engravingInput?.value || '').trim();
-  const color = selectedColor ? selectedColor.dataset.color || selectedColor.style.background : null;
-  const colorLabelText = selectedColor ? selectedColor.dataset.colorLabel || colorLabel(color) : null;
-  const diamond = selectedDiamond ? selectedDiamond.dataset.diamondColor || null : null;
-  const diamondHex = selectedDiamond ? selectedDiamond.dataset.diamondHex || null : null;
+  const personalization = getSelectedModalPersonalization();
   addToCartItem(p.id, p.name, p.price, p.image, _modalQty, {
-    color,
-    colorLabel: colorLabelText,
-    diamond,
-    diamondHex,
-    engraving
+    color: personalization.color,
+    colorLabel: personalization.colorLabel,
+    diamond: personalization.diamond,
+    diamondHex: personalization.diamondHex,
+    engraving: personalization.engraving
   });
   _modalQty = 1;
   closeModal();
@@ -455,6 +464,19 @@ function inquireProduct(id, name, price) {
   window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
+function inquireProductFromModal() {
+  const modal = document.getElementById('productModal');
+  const p = modal.dataset.product ? JSON.parse(modal.dataset.product) : null;
+  if (!p) return;
+  const personalization = getSelectedModalPersonalization();
+  let msg = `Hello! I want to order this item:%0A*${p.name}* — ${p.price} AZN`;
+  if (personalization.engraving) msg += `%0AName/engraving: ${personalization.engraving}`;
+  if (personalization.colorLabel) msg += `%0AChain color: ${personalization.colorLabel}`;
+  if (personalization.diamond) msg += `%0ADiamond color: ${personalization.diamond}`;
+  msg += `%0A%0AIs this personalized version available? 🌸`;
+  window.open(`https://wa.me/${WA_NUMBER}?text=${msg}`, '_blank');
+}
+
 // ============================================================
 //  CONTACT FORM
 // ============================================================
@@ -472,6 +494,29 @@ function submitInquiry(e) {
 //  UI HELPERS
 // ============================================================
 function toggleMenu() { document.getElementById('navLinks')?.classList.toggle('open'); }
+
+function initScrollReveal() {
+  const targets = document.querySelectorAll(
+    '.hero, .section-header, .cat-card, .product-card, .promo-banner, .about-grid, .contact-grid, .shop-sidebar, .shop-main, .footer-grid, .insta-strip, .page-hero.small'
+  );
+  if (!targets.length) return;
+
+  targets.forEach(el => el.classList.add('reveal-on-scroll'));
+
+  const observer = new IntersectionObserver(
+    entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('revealed');
+          observer.unobserve(entry.target);
+        }
+      });
+    },
+    { threshold: 0.12, rootMargin: '0px 0px -40px 0px' }
+  );
+
+  targets.forEach(el => observer.observe(el));
+}
 
 window.addEventListener('scroll', () => {
   const h = document.getElementById('header');
