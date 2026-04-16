@@ -1837,3 +1837,135 @@ em { font-style: italic; color: var(--pink-deep); }
 
   .cat-card__surface { min-height: 130px; padding: 1.25rem 1rem; }
 }
+
+/* ============================================================
+   PERSONALIZATION / ENGRAVING FIELD
+   ============================================================ */
+
+.modal-engraving {
+  margin-bottom: 1.5rem;
+  padding: 1.1rem 1.25rem 1rem;
+  background: linear-gradient(135deg, #fff8f5 0%, #fff4f8 100%);
+  border: 1.5px solid var(--pink-light, #f4c2d0);
+  border-radius: 14px;
+  position: relative;
+  overflow: hidden;
+}
+
+.modal-engraving::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--pink-deep, #c97a9a), var(--pink-light, #f4c2d0), var(--pink-deep, #c97a9a));
+  background-size: 200% 100%;
+  animation: shimmerLine 3s linear infinite;
+}
+
+@keyframes shimmerLine {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.modal-engraving h5 {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-mid, #8a6070);
+  margin-bottom: 0.65rem;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.engrave-optional {
+  font-size: 0.62rem;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  background: var(--pink-pale, #fdf0f4);
+  color: var(--pink-deep, #c97a9a);
+  border: 1px solid var(--pink-light, #f4c2d0);
+  border-radius: 20px;
+  padding: 1px 7px;
+  margin-left: 4px;
+}
+
+.engrave-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.engrave-input {
+  width: 100%;
+  padding: 0.7rem 3.2rem 0.7rem 0.9rem;
+  font-size: 1.05rem;
+  font-family: 'Cormorant Garamond', 'Georgia', serif;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-dark, #2d1a22);
+  background: #fff;
+  border: 1.5px solid var(--pink-light, #f4c2d0);
+  border-radius: 10px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+
+.engrave-input::placeholder {
+  color: #d8b0bf;
+  letter-spacing: 0.12em;
+  font-weight: 300;
+  font-style: italic;
+}
+
+.engrave-input:focus {
+  border-color: var(--pink-deep, #c97a9a);
+  box-shadow: 0 0 0 3px rgba(201, 122, 154, 0.12);
+}
+
+.engrave-counter {
+  position: absolute;
+  right: 10px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--pink-deep, #c97a9a);
+  opacity: 0.7;
+  pointer-events: none;
+  font-family: inherit;
+  letter-spacing: 0;
+}
+
+.engrave-hint {
+  font-size: 0.67rem;
+  color: var(--text-light, #b89aa8);
+  margin-top: 0.5rem;
+  margin-bottom: 0;
+  line-height: 1.5;
+  letter-spacing: 0.01em;
+}
+
+/* Cart engraving tag */
+.cart-engraving-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.67rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--pink-deep, #c97a9a);
+  background: var(--pink-pale, #fdf0f4);
+  border: 1px solid var(--pink-light, #f4c2d0);
+  border-radius: 20px;
+  padding: 2px 9px;
+  margin: 4px 0;
+  font-family: 'Cormorant Garamond', 'Georgia', serif;
+}
+
+.cart-engraving-tag i {
+  font-size: 0.6rem;
+}
