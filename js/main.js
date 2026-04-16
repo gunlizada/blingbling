@@ -226,7 +226,7 @@ async function openModal(id) {
             class="modal-engraving-input"
             type="text"
             maxlength="10"
-            placeholder="AMAYA"
+            placeholder="EMILIA"
             oninput="updateEngravingCounter()"
           />
           <p class="modal-engraving-help">Letters, numbers, and emojis are supported.</p>
