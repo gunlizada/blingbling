@@ -145,8 +145,33 @@ async function openModal(id) {
 
   const oldPrice = p.old_price ? `<span class="old-price" style="text-decoration:line-through;color:var(--text-light);font-size:1rem;margin-right:8px">${p.old_price} AZN</span>` : '';
 
+  // Engraving: show for necklaces, bracelets, rings, or if product name/desc mentions personali/engrav/custom
+  const engravCategories = ['necklaces','bracelets','rings','accessories'];
+  const engravKeywords = /personali|engrav|custom|name|initial/i;
+  const showEngraving = engravCategories.includes((p.category||'').toLowerCase())
+    || engravKeywords.test(p.name + ' ' + (p.description||''));
+
+  const engravingField = showEngraving ? `
+    <div class="modal-engraving">
+      <h5><i class="fas fa-pen-nib" style="font-size:0.75rem;margin-right:6px;color:var(--pink-deep)"></i>Personalization <span class="engrave-optional">optional</span></h5>
+      <div class="engrave-input-wrap">
+        <input
+          type="text"
+          id="modalEngravingInput"
+          class="engrave-input"
+          maxlength="10"
+          placeholder="e.g. AMAYA ✦"
+          oninput="updateEngraveCounter(this)"
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <span class="engrave-counter"><span id="engraveCount">0</span>/10</span>
+      </div>
+      <p class="engrave-hint">Letters &amp; numbers only · 10 characters max · No accents</p>
+    </div>` : '';
+
   // Store product data on modal for cart use
-  document.getElementById('productModal').dataset.product = JSON.stringify({ id: p.id, name: p.name, price: p.price, image: images[0] || null, quantity: p.quantity });
+  document.getElementById('productModal').dataset.product = JSON.stringify({ id: p.id, name: p.name, price: p.price, image: images[0] || null, quantity: p.quantity, showEngraving });
 
   document.getElementById('modalBody').innerHTML = `
     <div class="modal-gallery">
@@ -159,6 +184,7 @@ async function openModal(id) {
       <div class="modal-price">${oldPrice}${p.price} AZN</div>
       <p class="modal-desc">${p.description || ''}</p>
       ${colorBtns ? `<div class="modal-colors"><h5>Color</h5><div class="modal-color-opts">${colorBtns}</div></div>` : ''}
+      ${engravingField}
       <div class="modal-qty">
         <h5>Quantity</h5>
         <div class="modal-qty-controls">
@@ -173,11 +199,18 @@ async function openModal(id) {
       </p>
       <div class="modal-actions">
         ${!isOutOfStock ? `<button class="btn btn-primary" onclick="addToCartFromModal()"><i class="fas fa-shopping-bag"></i> Add to Bag</button>` : ''}
-        <button class="btn btn-outline" onclick="inquireProduct('${p.id}','${p.name.replace(/'/g,"\\'")}',${p.price})">
+        <button class="btn btn-outline" onclick="inquireProductWithEngraving('${p.id}','${p.name.replace(/'/g,"\\'")}',${p.price})">
           <i class="fab fa-whatsapp"></i> Ask on WhatsApp
         </button>
       </div>
     </div>`;
+}
+
+function updateEngraveCounter(input) {
+  // Strip disallowed characters live
+  input.value = input.value.replace(/[^a-zA-Z0-9\s✦♡★]/g, '');
+  const count = document.getElementById('engraveCount');
+  if (count) count.textContent = input.value.length;
 }
 
 function closeModal() {
@@ -213,9 +246,23 @@ function addToCartFromModal() {
   if (!p) return;
   const selectedColor = document.querySelector('.modal-color-btn.selected');
   const color = selectedColor ? selectedColor.style.background : null;
-  addToCartItem(p.id, p.name, p.price, p.image, _modalQty, color);
+  const engravingEl = document.getElementById('modalEngravingInput');
+  const engraving = engravingEl ? engravingEl.value.trim() : null;
+  addToCartItem(p.id, p.name, p.price, p.image, _modalQty, color, engraving);
   _modalQty = 1;
   closeModal();
+}
+
+function inquireProductWithEngraving(id, name, price) {
+  const engravingEl = document.getElementById('modalEngravingInput');
+  const engraving = engravingEl ? engravingEl.value.trim() : '';
+  const selectedColor = document.querySelector('.modal-color-btn.selected');
+  const color = selectedColor ? selectedColor.title : '';
+  let msg = `Hello! I'm interested in: *${name}* — ${price} AZN.`;
+  if (engraving) msg += `\n✦ Engraving: *${engraving}*`;
+  if (color) msg += `\n🎨 Color: ${color}`;
+  msg += `\nIs it available? 🌸`;
+  window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
 // ============================================================
@@ -228,10 +275,10 @@ function addToCart(id) {
   addToCartItem(p.id, p.name, p.price, images[0] || null, 1, null);
 }
 
-function addToCartItem(id, name, price, image, qty, color) {
-  const existing = cart.find(i => String(i.id) === String(id) && i.color === color);
+function addToCartItem(id, name, price, image, qty, color, engraving) {
+  const existing = cart.find(i => String(i.id) === String(id) && i.color === color && i.engraving === (engraving||null));
   if (existing) { existing.qty += qty; }
-  else { cart.push({ id: String(id), name, price, qty, color, image }); }
+  else { cart.push({ id: String(id), name, price, qty, color, image, engraving: engraving || null }); }
   localStorage.setItem('bbb_cart', JSON.stringify(cart));
   updateCartBadge();
   renderCartItems();
@@ -257,6 +304,7 @@ function renderCartItems() {
         <div class="cart-item-info">
           <div class="cart-item-name">${item.name}</div>
           ${item.color ? `<div style="display:flex;align-items:center;gap:6px;margin:4px 0"><span style="width:12px;height:12px;border-radius:50%;background:${item.color};display:inline-block;border:1px solid #eee"></span></div>` : ''}
+          ${item.engraving ? `<div class="cart-engraving-tag"><i class="fas fa-pen-nib"></i> ${item.engraving}</div>` : ''}
           <div class="cart-item-price">${(item.price * item.qty).toFixed(2)} AZN</div>
           <div class="cart-item-controls">
             <button class="qty-btn" onclick="updateCartQty(${idx},-1)">−</button>
@@ -304,6 +352,7 @@ function checkoutWhatsApp() {
   cart.forEach(item => {
     msg += `▪ ${item.name}`;
     if (item.color) msg += ` (color: ${item.color})`;
+    if (item.engraving) msg += ` ✦ engraving: "${item.engraving}"`;
     msg += ` × ${item.qty} = ${(item.price * item.qty).toFixed(2)} AZN%0A`;
   });
   const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
