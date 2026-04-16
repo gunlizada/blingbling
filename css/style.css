@@ -1387,6 +1387,34 @@ em { font-style: italic; color: var(--pink-deep); }
 
 .cart-item-price { font-size: 0.88rem; color: var(--pink-deep); font-weight: 600; }
 
+.cart-item-personalization {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin: 5px 0 2px;
+}
+
+.cart-personal-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.64rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-mid);
+  background: var(--pink-whisper);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.18rem 0.45rem;
+}
+
+.cart-personal-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid rgba(143, 85, 99, 0.2);
+}
+
 .cart-item-controls { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
 
 .qty-btn {
@@ -1574,6 +1602,65 @@ em { font-style: italic; color: var(--pink-deep); }
 
 .modal-desc { font-size: 0.9rem; color: var(--text-mid); line-height: 1.75; margin-bottom: 1.5rem; }
 
+.modal-personalize {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(160deg, #fcfafb 0%, var(--pink-whisper) 100%);
+  padding: 0.95rem;
+  margin-bottom: 1.35rem;
+}
+
+.modal-personalize-note {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  background: rgba(143, 85, 99, 0.08);
+  border: 1px solid rgba(143, 85, 99, 0.14);
+  border-radius: var(--radius-sm);
+  padding: 0.55rem 0.65rem;
+  margin-bottom: 0.85rem;
+  font-size: 0.72rem;
+  color: var(--pink-deep);
+  letter-spacing: 0.05em;
+}
+
+.modal-personalize-note i { font-size: 0.78rem; }
+
+.modal-engraving { margin-bottom: 0.95rem; }
+
+.modal-engraving-input {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--white);
+  color: var(--text-dark);
+  padding: 0.72rem 0.8rem;
+  font-size: 0.88rem;
+  font-family: var(--font-body);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.modal-engraving-input:focus {
+  border-color: var(--pink-deep);
+  box-shadow: 0 0 0 3px rgba(143, 85, 99, 0.12);
+}
+
+.modal-engraving-help {
+  font-size: 0.72rem;
+  color: var(--text-light);
+  line-height: 1.5;
+  margin-top: 0.45rem;
+}
+
+.modal-engraving-counter {
+  display: inline-block;
+  font-size: 0.68rem;
+  color: var(--text-light);
+  letter-spacing: 0.06em;
+  margin-top: 0.3rem;
+}
+
 .modal-colors h5,
 .modal-qty h5 {
   font-size: 0.68rem;
@@ -1597,6 +1684,7 @@ em { font-style: italic; color: var(--pink-deep); }
 }
 
 .modal-color-btn.selected { box-shadow: 0 0 0 2px var(--pink-deep); }
+.modal-color-btn--diamond { border: 1px solid rgba(255, 255, 255, 0.85); }
 
 .modal-qty-controls { display: flex; align-items: center; gap: 14px; margin-bottom: 1.5rem; }
 
@@ -1836,136 +1924,4 @@ em { font-style: italic; color: var(--pink-deep); }
   .cat-grid { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
 
   .cat-card__surface { min-height: 130px; padding: 1.25rem 1rem; }
-}
-
-/* ============================================================
-   PERSONALIZATION / ENGRAVING FIELD
-   ============================================================ */
-
-.modal-engraving {
-  margin-bottom: 1.5rem;
-  padding: 1.1rem 1.25rem 1rem;
-  background: linear-gradient(135deg, #fff8f5 0%, #fff4f8 100%);
-  border: 1.5px solid var(--pink-light, #f4c2d0);
-  border-radius: 14px;
-  position: relative;
-  overflow: hidden;
-}
-
-.modal-engraving::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, var(--pink-deep, #c97a9a), var(--pink-light, #f4c2d0), var(--pink-deep, #c97a9a));
-  background-size: 200% 100%;
-  animation: shimmerLine 3s linear infinite;
-}
-
-@keyframes shimmerLine {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-
-.modal-engraving h5 {
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--text-mid, #8a6070);
-  margin-bottom: 0.65rem;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.engrave-optional {
-  font-size: 0.62rem;
-  font-weight: 400;
-  letter-spacing: 0.04em;
-  text-transform: none;
-  background: var(--pink-pale, #fdf0f4);
-  color: var(--pink-deep, #c97a9a);
-  border: 1px solid var(--pink-light, #f4c2d0);
-  border-radius: 20px;
-  padding: 1px 7px;
-  margin-left: 4px;
-}
-
-.engrave-input-wrap {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.engrave-input {
-  width: 100%;
-  padding: 0.7rem 3.2rem 0.7rem 0.9rem;
-  font-size: 1.05rem;
-  font-family: 'Cormorant Garamond', 'Georgia', serif;
-  font-weight: 500;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--text-dark, #2d1a22);
-  background: #fff;
-  border: 1.5px solid var(--pink-light, #f4c2d0);
-  border-radius: 10px;
-  outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
-  box-sizing: border-box;
-}
-
-.engrave-input::placeholder {
-  color: #d8b0bf;
-  letter-spacing: 0.12em;
-  font-weight: 300;
-  font-style: italic;
-}
-
-.engrave-input:focus {
-  border-color: var(--pink-deep, #c97a9a);
-  box-shadow: 0 0 0 3px rgba(201, 122, 154, 0.12);
-}
-
-.engrave-counter {
-  position: absolute;
-  right: 10px;
-  font-size: 0.65rem;
-  font-weight: 600;
-  color: var(--pink-deep, #c97a9a);
-  opacity: 0.7;
-  pointer-events: none;
-  font-family: inherit;
-  letter-spacing: 0;
-}
-
-.engrave-hint {
-  font-size: 0.67rem;
-  color: var(--text-light, #b89aa8);
-  margin-top: 0.5rem;
-  margin-bottom: 0;
-  line-height: 1.5;
-  letter-spacing: 0.01em;
-}
-
-/* Cart engraving tag */
-.cart-engraving-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 0.67rem;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--pink-deep, #c97a9a);
-  background: var(--pink-pale, #fdf0f4);
-  border: 1px solid var(--pink-light, #f4c2d0);
-  border-radius: 20px;
-  padding: 2px 9px;
-  margin: 4px 0;
-  font-family: 'Cormorant Garamond', 'Georgia', serif;
-}
-
-.cart-engraving-tag i {
-  font-size: 0.6rem;
 }
