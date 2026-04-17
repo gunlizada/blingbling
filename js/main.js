@@ -4,6 +4,50 @@
 
 let cart = JSON.parse(localStorage.getItem('bbb_cart') || '[]');
 let productCache = []; // in-memory cache after first load
+
+/** Total units of this product id in the bag (all variants / lines). */
+function totalQtyForProduct(productId, excludeIdx = -1) {
+  return cart.reduce((sum, item, idx) => {
+    if (idx === excludeIdx) return sum;
+    if (String(item.id) !== String(productId)) return sum;
+    return sum + (Number(item.qty) || 0);
+  }, 0);
+}
+
+/** Shelf stock for a product: live cache first, then any cart line that stored stockLimit (legacy / offline). */
+function getStockLimitForProduct(productId) {
+  const p = productCache.find(x => String(x.id) === String(productId));
+  if (p != null && p.quantity != null) {
+    const n = Number(p.quantity);
+    if (Number.isFinite(n)) return Math.max(0, n);
+  }
+  const fromCart = cart
+    .filter(i => String(i.id) === String(productId) && i.stockLimit != null)
+    .map(i => Number(i.stockLimit));
+  if (fromCart.length) return Math.max(...fromCart);
+  return null;
+}
+
+/** If bag totals exceed known stock (e.g. legacy cart), trim from last lines. */
+function enforceCartStockLimits() {
+  const ids = [...new Set(cart.map(i => String(i.id)))];
+  let changed = false;
+  for (const id of ids) {
+    const stock = getStockLimitForProduct(id);
+    if (stock == null) continue;
+    let over = totalQtyForProduct(id) - stock;
+    if (over <= 0) continue;
+    for (let i = cart.length - 1; i >= 0 && over > 0; i--) {
+      if (String(cart[i].id) !== id) continue;
+      const dec = Math.min(cart[i].qty, over);
+      cart[i].qty -= dec;
+      over -= dec;
+      changed = true;
+      if (cart[i].qty <= 0) cart.splice(i, 1);
+    }
+  }
+  if (changed) localStorage.setItem('bbb_cart', JSON.stringify(cart));
+}
 const PERSONALIZATION_DIAMOND_COLORS = [
   { name: 'White', hex: '#f4f4f4' },
   { name: 'Black', hex: '#24242c' },
@@ -54,6 +98,8 @@ async function loadAndRenderHome() {
   if (!grid) return;
   grid.innerHTML = loadingHTML();
   productCache = await getProducts();
+  enforceCartStockLimits();
+  updateCartBadge();
   renderProductGrid(grid, productCache.slice(0, 8));
 }
 
@@ -146,6 +192,7 @@ async function searchProducts() {
 //  PRODUCT MODAL
 // ============================================================
 async function openModal(id) {
+  _modalQty = 1;
   document.getElementById('modalOverlay').classList.add('open');
   document.getElementById('productModal').classList.add('open');
   document.getElementById('modalBody').innerHTML = `
@@ -160,7 +207,9 @@ async function openModal(id) {
 
   const images = Array.isArray(p.images) ? p.images : [];
   const colors = Array.isArray(p.colors) ? p.colors : [];
-  const isOutOfStock = p.quantity <= 0;
+  const qtyInBag = totalQtyForProduct(p.id);
+  const available = Math.max(0, (Number(p.quantity) || 0) - qtyInBag);
+  const isOutOfStock = (Number(p.quantity) || 0) <= 0 || available <= 0;
 
   const mainImg = images.length
     ? `<img src="${images[0]}" alt="${p.name}" id="modalMainImgEl" style="max-width:100%;max-height:380px;object-fit:contain"/>`
@@ -248,7 +297,11 @@ async function openModal(id) {
       </div>
       <p class="modal-stock ${isOutOfStock?'out':'in'}">
         <i class="fas fa-circle" style="font-size:0.5rem;margin-right:5px"></i>
-        ${isOutOfStock ? 'Out of stock' : `In stock (${p.quantity} left)`}
+        ${(Number(p.quantity) || 0) <= 0
+          ? 'Out of stock'
+          : available <= 0
+            ? 'All available pieces are already in your bag'
+            : `In stock (${available} left${qtyInBag > 0 ? ` · ${qtyInBag} in your bag` : ''})`}
       </p>
       <div class="modal-actions">
         ${!isOutOfStock ? `<button class="btn btn-primary" onclick="addToCartFromModal()"><i class="fas fa-shopping-bag"></i> Add to Bag</button>` : ''}
@@ -308,8 +361,11 @@ let _modalQty = 1;
 function changeModalQty(delta) {
   const modal = document.getElementById('productModal');
   const p = modal.dataset.product ? JSON.parse(modal.dataset.product) : null;
-  const max = p ? p.quantity : 99;
-  _modalQty = Math.max(1, Math.min(max, _modalQty + delta));
+  const shelf = p ? Math.max(0, Number(p.quantity) || 0) : 99;
+  const inBag = p ? totalQtyForProduct(p.id) : 0;
+  const room = Math.max(0, shelf - inBag);
+  const maxPick = room > 0 ? room : 1;
+  _modalQty = Math.max(1, Math.min(maxPick, _modalQty + delta));
   const el = document.getElementById('modalQtyVal');
   if (el) el.textContent = _modalQty;
 }
@@ -319,13 +375,14 @@ function addToCartFromModal() {
   const p = modal.dataset.product ? JSON.parse(modal.dataset.product) : null;
   if (!p) return;
   const personalization = getSelectedModalPersonalization();
+  const shelf = Math.max(0, Number(p.quantity) || 0);
   addToCartItem(p.id, p.name, p.price, p.image, _modalQty, {
     color: personalization.color,
     colorLabel: personalization.colorLabel,
     diamond: personalization.diamond,
     diamondHex: personalization.diamondHex,
     engraving: personalization.engraving
-  }, p.quantity || 99);
+  }, shelf);
   _modalQty = 1;
   closeModal();
 }
@@ -337,16 +394,17 @@ function addToCart(id) {
   const p = productCache.find(x => String(x.id) === String(id));
   if (!p) return;
   const images = Array.isArray(p.images) ? p.images : [];
+  const shelf = Math.max(0, Number(p.quantity) || 0);
   addToCartItem(p.id, p.name, p.price, images[0] || null, 1, {
     color: null,
     colorLabel: null,
     diamond: null,
     diamondHex: null,
     engraving: ''
-  }, p.quantity);
+  }, shelf);
 }
 
-function addToCartItem(id, name, price, image, qty, personalization = {}, stock = 99) {
+function addToCartItem(id, name, price, image, qty, personalization = {}, shelfStock = null) {
   const normalizedPersonalization = {
     color: personalization.color || null,
     colorLabel: personalization.colorLabel || null,
@@ -354,6 +412,20 @@ function addToCartItem(id, name, price, image, qty, personalization = {}, stock 
     diamondHex: personalization.diamondHex || null,
     engraving: personalization.engraving || ''
   };
+  const stock =
+    shelfStock != null && Number.isFinite(Number(shelfStock))
+      ? Math.max(0, Number(shelfStock))
+      : getStockLimitForProduct(id);
+  const currentTotal = totalQtyForProduct(id);
+  const room = stock == null ? Infinity : stock - currentTotal;
+  if (room <= 0) {
+    window.alert('No more of this piece can be added — everything in stock is already in your bag.');
+    return;
+  }
+  const qtyToAdd = Math.min(qty, room);
+  if (qtyToAdd < qty) {
+    window.alert(`Only ${qtyToAdd} more can be added (${stock} in stock across all options in your bag).`);
+  }
   const existing = cart.find(
     i =>
       String(i.id) === String(id) &&
@@ -361,20 +433,22 @@ function addToCartItem(id, name, price, image, qty, personalization = {}, stock 
       i.diamond === normalizedPersonalization.diamond &&
       i.engraving === normalizedPersonalization.engraving
   );
-  if (existing) { existing.qty = Math.min(existing.stock || stock, existing.qty + qty); }
-  else {
+  if (existing) {
+    existing.qty += qtyToAdd;
+    if (stock != null) existing.stockLimit = stock;
+  } else {
     cart.push({
       id: String(id),
       name,
       price,
-      qty: Math.min(stock, qty),
-      stock,
+      qty: qtyToAdd,
       color: normalizedPersonalization.color,
       colorLabel: normalizedPersonalization.colorLabel,
       diamond: normalizedPersonalization.diamond,
       diamondHex: normalizedPersonalization.diamondHex,
       engraving: normalizedPersonalization.engraving,
-      image
+      image,
+      ...(stock != null ? { stockLimit: stock } : {})
     });
   }
   localStorage.setItem('bbb_cart', JSON.stringify(cart));
@@ -391,10 +465,16 @@ function updateCartBadge() {
 function renderCartItems() {
   const el = document.getElementById('cartItems');
   if (!el) return;
+  enforceCartStockLimits();
   if (!cart.length) {
     el.innerHTML = `<div class="cart-empty"><i class="fas fa-shopping-bag"></i><p>Your bag is empty</p></div>`;
   } else {
-    el.innerHTML = cart.map((item, idx) => `
+    el.innerHTML = cart.map((item, idx) => {
+      const stock = getStockLimitForProduct(item.id);
+      const others = totalQtyForProduct(item.id, idx);
+      const lineCap = stock == null ? Infinity : Math.max(0, stock - others);
+      const plusDisabled = stock != null && item.qty >= lineCap;
+      return `
       <div class="cart-item">
         <div class="cart-item-img">
           ${item.image ? `<img src="${item.image}" alt="${item.name}" />` : `<i class="fas fa-gem" style="color:var(--pink-light);font-size:1.5rem"></i>`}
@@ -410,13 +490,14 @@ function renderCartItems() {
           ` : ''}
           <div class="cart-item-price">${(item.price * item.qty).toFixed(2)} AZN</div>
           <div class="cart-item-controls">
-            <button class="qty-btn" onclick="updateCartQty(${idx},-1)" ${item.qty <= 1 ? 'disabled' : ''}>−</button>
+            <button type="button" class="qty-btn" onclick="updateCartQty(${idx},-1)">−</button>
             <span class="qty-val">${item.qty}</span>
-            <button class="qty-btn" onclick="updateCartQty(${idx},1)" ${item.qty >= (item.stock || 99) ? 'disabled' : ''}>+</button>
+            <button type="button" class="qty-btn" onclick="updateCartQty(${idx},1)" ${plusDisabled ? 'disabled aria-disabled="true"' : ''}>+</button>
           </div>
         </div>
-        <button class="cart-item-remove" onclick="removeFromCart(${idx})"><i class="fas fa-trash-alt"></i></button>
-      </div>`).join('');
+        <button type="button" class="cart-item-remove" onclick="removeFromCart(${idx})"><i class="fas fa-trash-alt"></i></button>
+      </div>`;
+    }).join('');
   }
   const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
   const totalEl = document.getElementById('cartTotal');
@@ -425,8 +506,16 @@ function renderCartItems() {
 
 function updateCartQty(idx, delta) {
   const item = cart[idx];
-  const max = item.stock || 99;
-  item.qty = Math.max(1, Math.min(max, item.qty + delta));
+  if (!item) return;
+  const stock = getStockLimitForProduct(item.id);
+  const others = totalQtyForProduct(item.id, idx);
+  let newQty = item.qty + delta;
+  if (delta > 0 && stock != null) {
+    const cap = stock - others;
+    newQty = Math.min(newQty, cap);
+  }
+  newQty = Math.max(1, newQty);
+  cart[idx].qty = newQty;
   localStorage.setItem('bbb_cart', JSON.stringify(cart));
   updateCartBadge(); renderCartItems();
 }
