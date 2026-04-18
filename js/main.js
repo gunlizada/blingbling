@@ -207,9 +207,11 @@ async function openModal(id) {
 
   const images = Array.isArray(p.images) ? p.images : [];
   const colors = Array.isArray(p.colors) ? p.colors : [];
+  const isHidden = p.active === false;
   const qtyInBag = totalQtyForProduct(p.id);
   const available = Math.max(0, (Number(p.quantity) || 0) - qtyInBag);
-  const isOutOfStock = (Number(p.quantity) || 0) <= 0 || available <= 0;
+  const isOutOfStockQty = (Number(p.quantity) || 0) <= 0 || available <= 0;
+  const isOutOfStock = isHidden || isOutOfStockQty;
 
   const mainImg = images.length
     ? `<img src="${images[0]}" alt="${p.name}" id="modalMainImgEl" style="max-width:100%;max-height:380px;object-fit:contain"/>`
@@ -250,7 +252,8 @@ async function openModal(id) {
     name: p.name,
     price: p.price,
     image: images[0] || null,
-    quantity: p.quantity
+    quantity: p.quantity,
+    active: p.active !== false
   });
 
   document.getElementById('modalBody').innerHTML = `
@@ -263,7 +266,7 @@ async function openModal(id) {
       <div class="modal-name">${p.name}</div>
       <div class="modal-price">${oldPrice}${p.price} AZN</div>
       <p class="modal-desc">${p.description || ''}</p>
-      <div class="modal-personalize">
+      ${!isHidden ? `<div class="modal-personalize">
         <div class="modal-personalize-note">
           <i class="fas fa-stars" aria-hidden="true"></i>
           <span>Personalized piece prepared specially for you</span>
@@ -290,24 +293,26 @@ async function openModal(id) {
       <div class="modal-qty">
         <h5>Quantity</h5>
         <div class="modal-qty-controls">
-          <button class="qty-btn" onclick="changeModalQty(-1)">−</button>
+          <button type="button" class="qty-btn" onclick="changeModalQty(-1)">−</button>
           <span class="modal-qty-val" id="modalQtyVal">1</span>
-          <button class="qty-btn" onclick="changeModalQty(1)">+</button>
+          <button type="button" class="qty-btn" onclick="changeModalQty(1)">+</button>
         </div>
-      </div>
+      </div>` : ''}
       <p class="modal-stock ${isOutOfStock?'out':'in'}">
         <i class="fas fa-circle" style="font-size:0.5rem;margin-right:5px"></i>
-        ${(Number(p.quantity) || 0) <= 0
+        ${isHidden
+          ? 'Sold out · this piece is not available to order'
+          : (Number(p.quantity) || 0) <= 0
           ? 'Out of stock'
           : available <= 0
             ? 'All available pieces are already in your bag'
             : `In stock (${available} left${qtyInBag > 0 ? ` · ${qtyInBag} in your bag` : ''})`}
       </p>
       <div class="modal-actions">
-        ${!isOutOfStock ? `<button class="btn btn-primary" onclick="addToCartFromModal()"><i class="fas fa-shopping-bag"></i> Add to Bag</button>` : ''}
-        <button class="btn btn-outline" onclick="inquireProductFromModal()">
+        ${!isOutOfStock ? `<button type="button" class="btn btn-primary" onclick="addToCartFromModal()"><i class="fas fa-shopping-bag"></i> Add to Bag</button>` : ''}
+        ${!isHidden ? `<button type="button" class="btn btn-outline" onclick="inquireProductFromModal()">
           <i class="fab fa-whatsapp"></i> Ask on WhatsApp
-        </button>
+        </button>` : ''}
       </div>
     </div>`;
 }
@@ -373,7 +378,7 @@ function changeModalQty(delta) {
 function addToCartFromModal() {
   const modal = document.getElementById('productModal');
   const p = modal.dataset.product ? JSON.parse(modal.dataset.product) : null;
-  if (!p) return;
+  if (!p || p.active === false) return;
   const personalization = getSelectedModalPersonalization();
   const shelf = Math.max(0, Number(p.quantity) || 0);
   addToCartItem(p.id, p.name, p.price, p.image, _modalQty, {
@@ -392,7 +397,7 @@ function addToCartFromModal() {
 // ============================================================
 function addToCart(id) {
   const p = productCache.find(x => String(x.id) === String(id));
-  if (!p) return;
+  if (!p || p.active === false) return;
   const images = Array.isArray(p.images) ? p.images : [];
   const shelf = Math.max(0, Number(p.quantity) || 0);
   addToCartItem(p.id, p.name, p.price, images[0] || null, 1, {
