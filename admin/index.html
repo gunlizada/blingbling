@@ -425,7 +425,7 @@ function renderTable() {
       <td>
         <button class="status-toggle" data-id="${p.id}" data-active="${isActive}" onclick="toggleStatus(this)">
           <div class="toggle-dot ${isActive ? 'toggle-on' : 'toggle-off'}"></div>
-          <span style="font-size:0.8rem;color:var(--text-light)">${isActive ? 'Active' : 'Hidden'}</span>
+          <span style="font-size:0.8rem;color:var(--text-light)">${isActive ? 'Active' : 'Inactive'}</span>
         </button>
       </td>
       <td>
@@ -448,7 +448,7 @@ async function toggleStatus(btn) {
   const p = allProducts.find(x => String(x.id) === String(id));
   if (p) p.active = !current;
   filterTable();
-  showToast(current ? 'Product hidden' : 'Product activated', 'success');
+  showToast(current ? 'Inactive — shown on shop as sold out' : 'Active — available to order', 'success');
 }
 
 // ---- DELETE ----
