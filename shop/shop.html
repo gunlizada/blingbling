@@ -194,7 +194,7 @@
       let filtered = products.filter(p => {
         const catMatch = currentCat === 'all' || p.category === currentCat;
         const priceMatch = Number(p.price) <= maxPrice;
-        return catMatch && priceMatch;
+        return catMatch && priceMatch && p.active !== false;
       });
       if (sortMode === 'price-asc') filtered.sort((a,b) => a.price - b.price);
       else if (sortMode === 'price-desc') filtered.sort((a,b) => b.price - a.price);
@@ -202,8 +202,6 @@
       else filtered.sort((a,b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
       document.getElementById('productCount').textContent = `${filtered.length} Products`;
       grid.innerHTML = filtered.length ? filtered.map(p => productCard(p)).join('') : '<p class="no-products">No products found.</p>';
-      enforceCartStockLimits();
-      updateCartBadge();
     }
 
     function filterByPrice(val) {
