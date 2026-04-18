@@ -3,12 +3,11 @@
 //  All data comes from Supabase database — real & global
 // ============================================================
 
-// ---- FETCH ALL ACTIVE PRODUCTS (for shop/homepage) ----
+// ---- FETCH PRODUCTS FOR SHOP & HOME (active + hidden/inactive; hidden show as sold out) ----
 async function getProducts() {
   const { data, error } = await supabase
     .from('products')
     .select('*')
-    .eq('active', true)
     .order('created_at', { ascending: false });
   if (error) { console.error('getProducts error:', error); return []; }
   return data || [];
@@ -81,7 +80,11 @@ function getCategories() {
 
 // ---- RENDER PRODUCT CARD HTML ----
 function productCard(p) {
-  const isOutOfStock = p.quantity <= 0;
+  const isHidden = p.active === false;
+  const isOutOfStockQty = (Number(p.quantity) || 0) <= 0;
+  const showSoldOutBadge = isHidden || isOutOfStockQty;
+  const canAddToBag = !isHidden && !isOutOfStockQty;
+  const showWhatsApp = !isHidden;
   const images = Array.isArray(p.images) ? p.images : [];
   const colors = Array.isArray(p.colors) ? p.colors : [];
   const imgContent = images.length
@@ -90,15 +93,15 @@ function productCard(p) {
   const colorDots = colors.length
     ? `<div class="product-colors">${colors.map(c => `<span class="color-dot" style="background:${c}"></span>`).join('')}</div>` : '';
   const badge    = p.badge ? `<div class="product-badge">${p.badge}</div>` : '';
-  const oos      = isOutOfStock ? `<div class="out-of-stock-badge">Sold Out</div>` : '';
+  const oos      = showSoldOutBadge ? `<div class="out-of-stock-badge">Sold Out</div>` : '';
   const oldPrice = p.old_price ? `<span class="old-price">${p.old_price} AZN</span>` : '';
   return `
   <article class="product-card" onclick="openModal('${p.id}')">
     <div class="product-img">${imgContent}${badge}${oos}
       <div class="product-actions">
         <button type="button" title="Quick view" onclick="event.stopPropagation();openModal('${p.id}')"><i class="fas fa-eye"></i></button>
-        ${!isOutOfStock ? `<button type="button" title="Add to bag" onclick="event.stopPropagation();addToCart('${p.id}')"><i class="fas fa-shopping-bag"></i></button>` : ''}
-        <button type="button" title="WhatsApp" onclick="event.stopPropagation();inquireProduct('${p.id}','${p.name.replace(/'/g,"\\'")}',${p.price})"><i class="fab fa-whatsapp"></i></button>
+        ${canAddToBag ? `<button type="button" title="Add to bag" onclick="event.stopPropagation();addToCart('${p.id}')"><i class="fas fa-shopping-bag"></i></button>` : ''}
+        ${showWhatsApp ? `<button type="button" title="WhatsApp" onclick="event.stopPropagation();inquireProduct('${p.id}','${p.name.replace(/'/g,"\\'")}',${p.price})"><i class="fab fa-whatsapp"></i></button>` : ''}
       </div>
     </div>
     <div class="product-info">
