@@ -194,7 +194,7 @@
       let filtered = products.filter(p => {
         const catMatch = currentCat === 'all' || p.category === currentCat;
         const priceMatch = Number(p.price) <= maxPrice;
-        return catMatch && priceMatch && p.active !== false;
+        return catMatch && priceMatch;
       });
       if (sortMode === 'price-asc') filtered.sort((a,b) => a.price - b.price);
       else if (sortMode === 'price-desc') filtered.sort((a,b) => b.price - a.price);
