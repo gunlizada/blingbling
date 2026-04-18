@@ -3,7 +3,7 @@
 //  All data comes from Supabase database — real & global
 // ============================================================
 
-// ---- FETCH PRODUCTS FOR SHOP & HOME (includes hidden/inactive — they render as sold out, no WhatsApp) ----
+// ---- FETCH PRODUCTS FOR SHOP & HOME (includes inactive — inactive shows as sold out, no WhatsApp order) ----
 async function getProducts() {
   const { data, error } = await supabase
     .from('products')
@@ -80,11 +80,10 @@ function getCategories() {
 
 // ---- RENDER PRODUCT CARD HTML ----
 function productCard(p) {
-  const isHidden = p.active === false;
-  const isOutOfStockQty = (Number(p.quantity) || 0) <= 0;
-  const showSoldOutBadge = isHidden || isOutOfStockQty;
-  const canAddToBag = !isHidden && !isOutOfStockQty;
-  const showWhatsApp = !isHidden;
+  const isInactive = p.active === false;
+  const showSoldOutBadge = isInactive;
+  const canAddToBag = !isInactive;
+  const showWhatsApp = !isInactive;
   const images = Array.isArray(p.images) ? p.images : [];
   const colors = Array.isArray(p.colors) ? p.colors : [];
   const imgContent = images.length
