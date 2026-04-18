@@ -4,6 +4,23 @@
 
 let cart = JSON.parse(localStorage.getItem('bbb_cart') || '[]');
 let productCache = []; // in-memory cache after first load
+
+function isProductInactive(productId) {
+  const pr = productCache.find(x => String(x.id) === String(productId));
+  return !!(pr && pr.active === false);
+}
+
+function cartContainsInactiveProduct() {
+  return cart.some(item => isProductInactive(item.id));
+}
+
+function syncCartCheckoutWhatsAppButton() {
+  const waBtn = document.getElementById('cartCheckoutBtn');
+  if (!waBtn) return;
+  const blocked = cart.length > 0 && cartContainsInactiveProduct();
+  waBtn.disabled = !cart.length || blocked;
+  waBtn.title = blocked ? 'Remove unavailable pieces from your bag to order' : '';
+}
 const PERSONALIZATION_DIAMOND_COLORS = [
   { name: 'White', hex: '#f4f4f4' },
   { name: 'Black', hex: '#24242c' },
@@ -26,6 +43,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderCategories();
   initScrollReveal(); // init observer early — section elements exist at this point
   await loadAndRenderHome();
+  syncCartCheckoutWhatsAppButton();
 });
 
 // ============================================================
@@ -183,10 +201,10 @@ async function openModal(id) {
       aria-label="${c.name}"
     ></button>`).join('');
 
-  const isHidden = p.active === false;
-  const isOutOfStock = isHidden || (Number(p.quantity) || 0) <= 0;
+  const isInactive = p.active === false;
+  const isSoldOut = isInactive;
 
-  const modalPersonalizeBlock = !isHidden
+  const modalPersonalizeBlock = !isInactive
     ? `<div class="modal-personalize">
         <div class="modal-personalize-note">
           <i class="fas fa-stars" aria-hidden="true"></i>
@@ -213,7 +231,7 @@ async function openModal(id) {
       </div>`
     : '';
 
-  const modalQtyBlock = !isHidden
+  const modalQtyBlock = !isInactive
     ? `<div class="modal-qty">
         <h5>Quantity</h5>
         <div class="modal-qty-controls">
@@ -224,15 +242,15 @@ async function openModal(id) {
       </div>`
     : '';
 
-  const stockLineText = isHidden
-    ? 'Sold out · not available to order'
-    : ((Number(p.quantity) || 0) <= 0 ? 'Out of stock' : `In stock (${p.quantity} left)`);
+  const stockLineText = isInactive
+    ? 'Sold out'
+    : 'Available to order';
 
-  const addToBagBtn = !isOutOfStock
+  const addToBagBtn = !isSoldOut
     ? `<button type="button" class="btn btn-primary" onclick="addToCartFromModal()"><i class="fas fa-shopping-bag"></i> Add to Bag</button>`
     : '';
 
-  const whatsappModalBtn = !isHidden
+  const whatsappModalBtn = !isInactive
     ? `<button type="button" class="btn btn-outline" onclick="inquireProductFromModal()">
           <i class="fab fa-whatsapp"></i> Ask on WhatsApp
         </button>`
@@ -256,7 +274,7 @@ async function openModal(id) {
     price: p.price,
     image: images[0] || null,
     quantity: p.quantity,
-    hidden: isHidden
+    inactive: isInactive
   });
 
   document.getElementById('modalBody').innerHTML = `
@@ -271,7 +289,7 @@ async function openModal(id) {
       <p class="modal-desc">${p.description || ''}</p>
       ${modalPersonalizeBlock}
       ${modalQtyBlock}
-      <p class="modal-stock ${isOutOfStock ? 'out' : 'in'}">
+      <p class="modal-stock ${isSoldOut ? 'out' : 'in'}">
         <i class="fas fa-circle" style="font-size:0.5rem;margin-right:5px"></i>
         ${stockLineText}
       </p>
@@ -331,7 +349,8 @@ let _modalQty = 1;
 function changeModalQty(delta) {
   const modal = document.getElementById('productModal');
   const p = modal.dataset.product ? JSON.parse(modal.dataset.product) : null;
-  const max = p ? p.quantity : 99;
+  const q = p ? Number(p.quantity) : 0;
+  const max = q > 0 ? q : 99;
   _modalQty = Math.max(1, Math.min(max, _modalQty + delta));
   const el = document.getElementById('modalQtyVal');
   if (el) el.textContent = _modalQty;
@@ -340,7 +359,7 @@ function changeModalQty(delta) {
 function addToCartFromModal() {
   const modal = document.getElementById('productModal');
   const p = modal.dataset.product ? JSON.parse(modal.dataset.product) : null;
-  if (!p || p.hidden) return;
+  if (!p || p.inactive || p.hidden) return;
   const personalization = getSelectedModalPersonalization();
   addToCartItem(p.id, p.name, p.price, p.image, _modalQty, {
     color: personalization.color,
@@ -408,6 +427,7 @@ function addToCartItem(id, name, price, image, qty, personalization = {}) {
 function updateCartBadge() {
   const count = cart.reduce((s, i) => s + i.qty, 0);
   document.querySelectorAll('#cartCount').forEach(el => el.textContent = count);
+  syncCartCheckoutWhatsAppButton();
 }
 
 function renderCartItems() {
@@ -443,6 +463,7 @@ function renderCartItems() {
   const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
   const totalEl = document.getElementById('cartTotal');
   if (totalEl) totalEl.textContent = total.toFixed(2) + ' AZN';
+  syncCartCheckoutWhatsAppButton();
 }
 
 function updateCartQty(idx, delta) {
@@ -473,6 +494,10 @@ function openCartDrawer() {
 
 function checkoutWhatsApp() {
   if (!cart.length) return;
+  if (cartContainsInactiveProduct()) {
+    window.alert('Remove unavailable (sold out) pieces from your bag to order via WhatsApp.');
+    return;
+  }
   let msg = `Hello! I'd like to order from Bling Bling Baku:%0A%0A`;
   cart.forEach(item => {
     msg += `▪ ${item.name}`;
