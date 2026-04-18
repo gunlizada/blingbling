@@ -160,16 +160,6 @@ async function openModal(id) {
 
   const images = Array.isArray(p.images) ? p.images : [];
   const colors = Array.isArray(p.colors) ? p.colors : [];
-  const isOutOfStock = p.quantity <= 0;
-
-  const mainImg = images.length
-    ? `<img src="${images[0]}" alt="${p.name}" id="modalMainImgEl" style="max-width:100%;max-height:380px;object-fit:contain"/>`
-    : `<div class="no-img"><i class="fas fa-gem"></i></div>`;
-
-  const thumbs = images.length > 1
-    ? images.map((img, i) => `
-        <div class="modal-thumb ${i===0?'active':''}" onclick="switchModalImg(${i}, this, ${JSON.stringify(images).replace(/"/g,'&quot;')})">
-          <img src="${img}" alt="" /></div>`).join('') : '';
 
   const chainColorBtns = colors.map((c, i) => `
     <button
@@ -193,28 +183,11 @@ async function openModal(id) {
       aria-label="${c.name}"
     ></button>`).join('');
 
-  const oldPrice = p.old_price ? `<span class="old-price" style="text-decoration:line-through;color:var(--text-light);font-size:1rem;margin-right:8px">${p.old_price} AZN</span>` : '';
+  const isHidden = p.active === false;
+  const isOutOfStock = isHidden || (Number(p.quantity) || 0) <= 0;
 
-  // Store product data on modal for cart use
-  document.getElementById('productModal').dataset.product = JSON.stringify({
-    id: p.id,
-    name: p.name,
-    price: p.price,
-    image: images[0] || null,
-    quantity: p.quantity
-  });
-
-  document.getElementById('modalBody').innerHTML = `
-    <div class="modal-gallery">
-      <div class="modal-main-img">${mainImg}</div>
-      ${thumbs ? `<div class="modal-thumbs">${thumbs}</div>` : ''}
-    </div>
-    <div class="modal-info">
-      <div class="modal-cat">${p.category}</div>
-      <div class="modal-name">${p.name}</div>
-      <div class="modal-price">${oldPrice}${p.price} AZN</div>
-      <p class="modal-desc">${p.description || ''}</p>
-      <div class="modal-personalize">
+  const modalPersonalizeBlock = !isHidden
+    ? `<div class="modal-personalize">
         <div class="modal-personalize-note">
           <i class="fas fa-stars" aria-hidden="true"></i>
           <span>Personalized piece prepared specially for you</span>
@@ -237,24 +210,74 @@ async function openModal(id) {
           <h5>Diamond Color</h5>
           <div class="modal-color-opts">${diamondColorBtns}</div>
         </div>
-      </div>
-      <div class="modal-qty">
+      </div>`
+    : '';
+
+  const modalQtyBlock = !isHidden
+    ? `<div class="modal-qty">
         <h5>Quantity</h5>
         <div class="modal-qty-controls">
-          <button class="qty-btn" onclick="changeModalQty(-1)">−</button>
+          <button type="button" class="qty-btn" onclick="changeModalQty(-1)">−</button>
           <span class="modal-qty-val" id="modalQtyVal">1</span>
-          <button class="qty-btn" onclick="changeModalQty(1)">+</button>
+          <button type="button" class="qty-btn" onclick="changeModalQty(1)">+</button>
         </div>
-      </div>
-      <p class="modal-stock ${isOutOfStock?'out':'in'}">
+      </div>`
+    : '';
+
+  const stockLineText = isHidden
+    ? 'Sold out · not available to order'
+    : ((Number(p.quantity) || 0) <= 0 ? 'Out of stock' : `In stock (${p.quantity} left)`);
+
+  const addToBagBtn = !isOutOfStock
+    ? `<button type="button" class="btn btn-primary" onclick="addToCartFromModal()"><i class="fas fa-shopping-bag"></i> Add to Bag</button>`
+    : '';
+
+  const whatsappModalBtn = !isHidden
+    ? `<button type="button" class="btn btn-outline" onclick="inquireProductFromModal()">
+          <i class="fab fa-whatsapp"></i> Ask on WhatsApp
+        </button>`
+    : '';
+
+  const mainImg = images.length
+    ? `<img src="${images[0]}" alt="${p.name}" id="modalMainImgEl" style="max-width:100%;max-height:380px;object-fit:contain"/>`
+    : `<div class="no-img"><i class="fas fa-gem"></i></div>`;
+
+  const thumbs = images.length > 1
+    ? images.map((img, i) => `
+        <div class="modal-thumb ${i===0?'active':''}" onclick="switchModalImg(${i}, this, ${JSON.stringify(images).replace(/"/g,'&quot;')})">
+          <img src="${img}" alt="" /></div>`).join('') : '';
+
+  const oldPrice = p.old_price ? `<span class="old-price" style="text-decoration:line-through;color:var(--text-light);font-size:1rem;margin-right:8px">${p.old_price} AZN</span>` : '';
+
+  // Store product data on modal for cart use
+  document.getElementById('productModal').dataset.product = JSON.stringify({
+    id: p.id,
+    name: p.name,
+    price: p.price,
+    image: images[0] || null,
+    quantity: p.quantity,
+    hidden: isHidden
+  });
+
+  document.getElementById('modalBody').innerHTML = `
+    <div class="modal-gallery">
+      <div class="modal-main-img">${mainImg}</div>
+      ${thumbs ? `<div class="modal-thumbs">${thumbs}</div>` : ''}
+    </div>
+    <div class="modal-info">
+      <div class="modal-cat">${p.category}</div>
+      <div class="modal-name">${p.name}</div>
+      <div class="modal-price">${oldPrice}${p.price} AZN</div>
+      <p class="modal-desc">${p.description || ''}</p>
+      ${modalPersonalizeBlock}
+      ${modalQtyBlock}
+      <p class="modal-stock ${isOutOfStock ? 'out' : 'in'}">
         <i class="fas fa-circle" style="font-size:0.5rem;margin-right:5px"></i>
-        ${isOutOfStock ? 'Out of stock' : `In stock (${p.quantity} left)`}
+        ${stockLineText}
       </p>
       <div class="modal-actions">
-        ${!isOutOfStock ? `<button class="btn btn-primary" onclick="addToCartFromModal()"><i class="fas fa-shopping-bag"></i> Add to Bag</button>` : ''}
-        <button class="btn btn-outline" onclick="inquireProductFromModal()">
-          <i class="fab fa-whatsapp"></i> Ask on WhatsApp
-        </button>
+        ${addToBagBtn}
+        ${whatsappModalBtn}
       </div>
     </div>`;
 }
@@ -317,7 +340,7 @@ function changeModalQty(delta) {
 function addToCartFromModal() {
   const modal = document.getElementById('productModal');
   const p = modal.dataset.product ? JSON.parse(modal.dataset.product) : null;
-  if (!p) return;
+  if (!p || p.hidden) return;
   const personalization = getSelectedModalPersonalization();
   addToCartItem(p.id, p.name, p.price, p.image, _modalQty, {
     color: personalization.color,
@@ -335,7 +358,7 @@ function addToCartFromModal() {
 // ============================================================
 function addToCart(id) {
   const p = productCache.find(x => String(x.id) === String(id));
-  if (!p) return;
+  if (!p || p.active === false) return;
   const images = Array.isArray(p.images) ? p.images : [];
   addToCartItem(p.id, p.name, p.price, images[0] || null, 1, {
     color: null,
