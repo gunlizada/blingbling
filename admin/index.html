@@ -315,16 +315,9 @@ let formColors = [];
 // ---- INIT ----
 window.addEventListener('DOMContentLoaded', () => {
   initSupabase();
-  // If already logged in, skip login screen
-  const session = window.supabase?.auth?.getSession?.();
-  supabase.auth.getSession().then(({ data: { session } }) => {
-    if (session) {
-      document.getElementById('loginScreen').style.display = 'none';
-      document.getElementById('adminApp').style.display = 'block';
-      loadDashboard();
-      loadProductsPage();
-    }
-  });
+  // Security choice: always require credentials on each visit.
+  // This clears any persisted Supabase session so login is never auto-skipped.
+  supabase.auth.signOut();
 });
 
 // ---- AUTH ----
