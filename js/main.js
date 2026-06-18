@@ -121,7 +121,7 @@ async function filterProducts(cat, btn) {
   const grid = document.getElementById('productsGrid');
   if (!grid) return;
   if (!productCache.length) productCache = await getProducts();
-  const filtered = cat === 'all' ? productCache : productCache.filter(p => p.category === cat);
+  const filtered = cat === 'all' ? productCache : productCache.filter(p => categoryMatches(p.category, cat));
   renderProductGrid(grid, filtered);
 }
 
@@ -148,7 +148,8 @@ async function searchProducts() {
   if (!productCache.length) productCache = await getProducts();
   const results = productCache.filter(p =>
     p.name.toLowerCase().includes(q) ||
-    p.category.toLowerCase().includes(q) ||
+    categoryLabel(p.category).toLowerCase().includes(q) ||
+    (p.category && p.category.toLowerCase().includes(q)) ||
     (p.description && p.description.toLowerCase().includes(q))
   );
 
@@ -156,7 +157,7 @@ async function searchProducts() {
     ? results.map(p => productCard(p)).join('')
     : `<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--text-light)">
         <i class="fas fa-search" style="font-size:2rem;display:block;margin-bottom:14px;color:var(--pink-light)"></i>
-        <p>No results for <strong style="color:var(--text-mid)">"${q}"</strong></p>
+        <p>No results for <strong style="color:var(--text-mid)">"${escapeHtml(q)}"</strong></p>
        </div>`;
 }
 
@@ -257,7 +258,7 @@ async function openModal(id) {
     : '';
 
   const mainImg = images.length
-    ? `<img src="${images[0]}" alt="${p.name}" id="modalMainImgEl" style="max-width:100%;max-height:380px;object-fit:contain"/>`
+    ? `<img src="${escapeHtml(images[0])}" alt="${escapeHtml(p.name)}" id="modalMainImgEl" style="max-width:100%;max-height:380px;object-fit:contain"/>`
     : `<div class="no-img"><i class="fas fa-gem"></i></div>`;
 
   const thumbs = images.length > 1
@@ -283,10 +284,10 @@ async function openModal(id) {
       ${thumbs ? `<div class="modal-thumbs">${thumbs}</div>` : ''}
     </div>
     <div class="modal-info">
-      <div class="modal-cat">${p.category}</div>
-      <div class="modal-name">${p.name}</div>
-      <div class="modal-price">${oldPrice}${p.price} AZN</div>
-      <p class="modal-desc">${p.description || ''}</p>
+      <div class="modal-cat">${escapeHtml(categoryLabel(p.category))}</div>
+      <div class="modal-name">${escapeHtml(p.name)}</div>
+      <div class="modal-price">${oldPrice}${escapeHtml(p.price)} AZN</div>
+      <p class="modal-desc">${escapeHtml(p.description || '')}</p>
       ${modalPersonalizeBlock}
       ${modalQtyBlock}
       <p class="modal-stock ${isSoldOut ? 'out' : 'in'}">
@@ -439,15 +440,15 @@ function renderCartItems() {
     el.innerHTML = cart.map((item, idx) => `
       <div class="cart-item">
         <div class="cart-item-img">
-          ${item.image ? `<img src="${item.image}" alt="${item.name}" />` : `<i class="fas fa-gem" style="color:var(--pink-light);font-size:1.5rem"></i>`}
+          ${item.image ? `<img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}" />` : `<i class="fas fa-gem" style="color:var(--pink-light);font-size:1.5rem"></i>`}
         </div>
         <div class="cart-item-info">
-          <div class="cart-item-name">${item.name}</div>
+          <div class="cart-item-name">${escapeHtml(item.name)}</div>
           ${(item.color || item.diamond || item.engraving) ? `
             <div class="cart-item-personalization">
-              ${item.engraving ? `<span class="cart-personal-chip">Engraving: ${item.engraving}</span>` : ''}
-              ${item.color ? `<span class="cart-personal-chip"><span class="cart-personal-dot" style="background:${item.color}"></span>Chain: ${item.colorLabel || 'Custom'}</span>` : ''}
-              ${item.diamond ? `<span class="cart-personal-chip"><span class="cart-personal-dot" style="background:${item.diamondHex || '#f4f4f4'}"></span>Diamond: ${item.diamond}</span>` : ''}
+              ${item.engraving ? `<span class="cart-personal-chip">Engraving: ${escapeHtml(item.engraving)}</span>` : ''}
+              ${item.color ? `<span class="cart-personal-chip"><span class="cart-personal-dot" style="background:${escapeHtml(item.color)}"></span>Chain: ${escapeHtml(item.colorLabel || 'Custom')}</span>` : ''}
+              ${item.diamond ? `<span class="cart-personal-chip"><span class="cart-personal-dot" style="background:${escapeHtml(item.diamondHex || '#f4f4f4')}"></span>Diamond: ${escapeHtml(item.diamond)}</span>` : ''}
             </div>
           ` : ''}
           <div class="cart-item-price">${(item.price * item.qty).toFixed(2)} AZN</div>
@@ -511,8 +512,10 @@ function checkoutWhatsApp() {
   window.open(`https://wa.me/${WA_NUMBER}?text=${msg}`, '_blank');
 }
 
-function inquireProduct(id, name, price) {
-  const msg = `Hello! I'm interested in: *${name}* — ${price} AZN. Is it available? 🌸`;
+function inquireProduct(id) {
+  const p = productCache.find(x => String(x.id) === String(id));
+  if (!p) return;
+  const msg = `Hello! I'm interested in: *${p.name}* — ${p.price} AZN. Is it available? 🌸`;
   window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
