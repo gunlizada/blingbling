@@ -192,12 +192,6 @@
           <input type="text" class="table-search" placeholder="Search products…" oninput="filterTable()" id="tableSearch" />
           <select class="cat-filter-select" id="catFilter" onchange="filterTable()">
             <option value="">All Categories</option>
-            <option value="necklaces">Necklaces</option>
-            <option value="rings">Rings</option>
-            <option value="earrings">Earrings</option>
-            <option value="bracelets">Bracelets</option>
-            <option value="bags">Bags</option>
-            <option value="accessories">Accessories</option>
           </select>
           <select class="status-filter" id="statusFilter" onchange="filterTable()">
             <option value="">All Status</option>
@@ -232,18 +226,12 @@
     <div class="form-grid">
       <div class="form-group">
         <label>Product Name *</label>
-        <input type="text" class="form-input" id="fName" placeholder="e.g. Gold Chain Necklace" />
+        <input type="text" class="form-input" id="fName" placeholder="e.g. Mini Claw Clip" />
       </div>
       <div class="form-group">
         <label>Category *</label>
         <select class="form-select" id="fCat">
           <option value="">Select category</option>
-          <option value="necklaces">Necklaces</option>
-          <option value="rings">Rings</option>
-          <option value="earrings">Earrings</option>
-          <option value="bracelets">Bracelets</option>
-          <option value="bags">Bags</option>
-          <option value="accessories">Accessories</option>
         </select>
       </div>
       <div class="form-group">
@@ -302,6 +290,7 @@
 <!-- Supabase JS -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="../js/config.js"></script>
+<script src="../js/products.js"></script>
 <script>
 // ============================================================
 //  ADMIN LOGIC — Supabase powered
@@ -313,13 +302,55 @@ let editingId  = null;
 let formImages = [];    // URLs already uploaded
 let formColors = [];
 
+// ---- HTML ESCAPE (prevents XSS when rendering DB text into the admin DOM) ----
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // ---- INIT ----
 window.addEventListener('DOMContentLoaded', () => {
   initSupabase();
+  buildCategoryControls();
   // Security choice: always require credentials on each visit.
   // This clears any persisted Supabase session so login is never auto-skipped.
   supabase.auth.signOut();
 });
+
+// ---- CATEGORY CONTROLS (built from the shared taxonomy in products.js) ----
+function buildCategoryControls() {
+  // Table filter: parent (matches all its subs) + each leaf, indented.
+  const filterEl = document.getElementById('catFilter');
+  if (filterEl) {
+    let html = '<option value="">All Categories</option>';
+    getCategories().forEach(g => {
+      html += `<option value="${g.key}">${escapeHtml(g.label)}</option>`;
+      g.subs.forEach(s => { html += `<option value="${s.key}">&nbsp;&nbsp;— ${escapeHtml(s.label)}</option>`; });
+    });
+    filterEl.innerHTML = html;
+  }
+  // Add/Edit form: store a single leaf key. Parents with subs are non-selectable
+  // optgroup headers; parents without subs (e.g. Vanity Case) are plain options.
+  const formEl = document.getElementById('fCat');
+  if (formEl) {
+    let html = '<option value="">Select category</option>';
+    getCategories().forEach(g => {
+      if (g.subs.length) {
+        html += `<optgroup label="${escapeHtml(g.label)}">` +
+          g.subs.map(s => `<option value="${s.key}">${escapeHtml(s.label)}</option>`).join('') +
+          '</optgroup>';
+      } else {
+        html += `<option value="${g.key}">${escapeHtml(g.label)}</option>`;
+      }
+    });
+    formEl.innerHTML = html;
+  }
+}
 
 // ---- AUTH ----
 async function doLogin() {
@@ -374,7 +405,7 @@ async function loadDashboard() {
 
   const low = products.filter(p => p.quantity > 0 && p.quantity <= 5);
   document.getElementById('lowStockList').innerHTML = low.length
-    ? low.map(p => `<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)"><span style="font-weight:500">${p.name}</span><span style="color:#e07a20;font-weight:500">${p.quantity} left</span></div>`).join('')
+    ? low.map(p => `<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)"><span style="font-weight:500">${escapeHtml(p.name)}</span><span style="color:#e07a20;font-weight:500">${escapeHtml(p.quantity)} left</span></div>`).join('')
     : '<p style="color:var(--text-light);font-size:0.88rem">All products are well stocked ✦</p>';
 }
 
@@ -392,8 +423,8 @@ function filterTable() {
   const status = document.getElementById('statusFilter')?.value || '';
 
   filtered = allProducts.filter(p => {
-    const matchQ = !q || p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q);
-    const matchC = !cat || p.category === cat;
+    const matchQ = !q || p.name.toLowerCase().includes(q) || categoryLabel(p.category).toLowerCase().includes(q) || (p.category || '').toLowerCase().includes(q);
+    const matchC = !cat || categoryMatches(p.category, cat);
     const matchS = !status || (status === 'active' ? p.active : !p.active);
     return matchQ && matchC && matchS;
   });
@@ -407,14 +438,14 @@ function renderTable() {
     const qtyClass = qty <= 0 ? 'qty-out' : qty <= 5 ? 'qty-low' : '';
     const images = Array.isArray(p.images) ? p.images : [];
     const thumb = images.length
-      ? `<div class="prod-thumb"><img src="${images[0]}" alt="" loading="lazy" /></div>`
+      ? `<div class="prod-thumb"><img src="${escapeHtml(images[0])}" alt="" loading="lazy" /></div>`
       : `<div class="prod-thumb"><i class="fas fa-gem"></i></div>`;
     return `
     <tr>
       <td>${thumb}</td>
-      <td><div class="prod-name">${p.name}</div></td>
-      <td><span class="cat-badge">${p.category}</span></td>
-      <td class="price-cell">${p.price} AZN${p.old_price ? `<br><span style="font-size:0.75rem;color:var(--text-light);text-decoration:line-through">${p.old_price}</span>` : ''}</td>
+      <td><div class="prod-name">${escapeHtml(p.name)}</div></td>
+      <td><span class="cat-badge">${escapeHtml(categoryLabel(p.category))}</span></td>
+      <td class="price-cell">${escapeHtml(p.price)} AZN${p.old_price ? `<br><span style="font-size:0.75rem;color:var(--text-light);text-decoration:line-through">${escapeHtml(p.old_price)}</span>` : ''}</td>
       <td class="qty-cell ${qtyClass}">${qty}</td>
       <td>
         <button class="status-toggle" data-id="${p.id}" data-active="${isActive}" onclick="toggleStatus(this)">
@@ -581,7 +612,7 @@ async function handleImgUpload(input) {
 function renderImgPreviews() {
   document.getElementById('imgPreviews').innerHTML = formImages.map((src, i) => `
     <div class="img-preview">
-      <img src="${src}" alt="" />
+      <img src="${escapeHtml(src)}" alt="" />
       <button class="remove-img" onclick="removeImg(${i})"><i class="fas fa-times"></i></button>
     </div>`).join('');
 }
@@ -597,7 +628,7 @@ function addColorPicker() {
 function renderColorChips() {
   document.getElementById('colorManager').innerHTML =
     formColors.map((c, i) => `
-      <div class="color-chip" style="background:${c}">
+      <div class="color-chip" style="background:${escapeHtml(c)}">
         <button class="rm-color" onclick="removeColor(${i})"><i class="fas fa-times"></i></button>
       </div>`).join('') +
     '<button class="add-color-btn" onclick="addColorPicker()"><i class="fas fa-plus"></i> Add Color</button>';
