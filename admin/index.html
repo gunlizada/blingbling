@@ -289,8 +289,7 @@
 
 <!-- Supabase JS -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="../js/config.js"></script>
-<script src="../js/products.js"></script>
+<script src="../js/config.js?v=3"></script>
 <script>
 // ============================================================
 //  ADMIN LOGIC — Supabase powered
@@ -313,6 +312,47 @@ function escapeHtml(str) {
     .replace(/'/g, '&#39;');
 }
 
+// ============================================================
+//  CATEGORY TAXONOMY (kept self-contained so the admin never
+//  depends on js/products.js loading/caching). If you change
+//  categories, update the matching getCategories() in js/products.js too.
+// ============================================================
+function getCategories() {
+  return [
+    { key: 'claw-clips', label: 'Claw Clips', icon: 'fas fa-hand-sparkles', subs: [
+      { key: 'mini-claw-clips',  label: 'Mini Claw Clips' },
+      { key: 'large-claw-clips', label: 'Large Claw Clips' }
+    ] },
+    { key: 'hairbrush', label: 'Hairbrush', icon: 'fas fa-brush', subs: [
+      { key: 'large-hairbrush', label: 'Large Hairbrush' },
+      { key: 'small-hairbrush', label: 'Small Hairbrush' },
+      { key: 'hair-comb',       label: 'Hair Comb' }
+    ] },
+    { key: 'vanity-case', label: 'Vanity Case', icon: 'fas fa-suitcase', subs: [] },
+    { key: 'mirrors', label: 'Mirrors', icon: 'fas fa-compact-disc', subs: [
+      { key: 'hand-mirrors',    label: 'Hand Mirrors' },
+      { key: '2-in-1-mirrors',  label: '2 in 1 Mirrors' }
+    ] }
+  ];
+}
+function leafKeysForCategory(key) {
+  const g = getCategories().find(x => x.key === key);
+  if (g) return (g.subs && g.subs.length) ? g.subs.map(s => s.key) : [g.key];
+  return [key];
+}
+function categoryMatches(productCategory, filterKey) {
+  if (!filterKey || filterKey === 'all') return true;
+  return leafKeysForCategory(filterKey).includes(productCategory);
+}
+function categoryLabel(key) {
+  for (const g of getCategories()) {
+    if (g.key === key) return g.label;
+    const s = (g.subs || []).find(x => x.key === key);
+    if (s) return s.label;
+  }
+  return key || '';
+}
+
 // ---- INIT ----
 window.addEventListener('DOMContentLoaded', () => {
   initSupabase();
@@ -322,7 +362,7 @@ window.addEventListener('DOMContentLoaded', () => {
   supabase.auth.signOut();
 });
 
-// ---- CATEGORY CONTROLS (built from the shared taxonomy in products.js) ----
+// ---- CATEGORY CONTROLS (built from the taxonomy defined above) ----
 function buildCategoryControls() {
   // Table filter: parent (matches all its subs) + each leaf, indented.
   const filterEl = document.getElementById('catFilter');
@@ -330,7 +370,7 @@ function buildCategoryControls() {
     let html = '<option value="">All Categories</option>';
     getCategories().forEach(g => {
       html += `<option value="${g.key}">${escapeHtml(g.label)}</option>`;
-      g.subs.forEach(s => { html += `<option value="${s.key}">&nbsp;&nbsp;— ${escapeHtml(s.label)}</option>`; });
+      (g.subs || []).forEach(s => { html += `<option value="${s.key}">&nbsp;&nbsp;— ${escapeHtml(s.label)}</option>`; });
     });
     filterEl.innerHTML = html;
   }
@@ -340,9 +380,10 @@ function buildCategoryControls() {
   if (formEl) {
     let html = '<option value="">Select category</option>';
     getCategories().forEach(g => {
-      if (g.subs.length) {
+      const subs = g.subs || [];
+      if (subs.length) {
         html += `<optgroup label="${escapeHtml(g.label)}">` +
-          g.subs.map(s => `<option value="${s.key}">${escapeHtml(s.label)}</option>`).join('') +
+          subs.map(s => `<option value="${s.key}">${escapeHtml(s.label)}</option>`).join('') +
           '</optgroup>';
       } else {
         html += `<option value="${g.key}">${escapeHtml(g.label)}</option>`;
