@@ -45,7 +45,7 @@
       </div>
     </nav>
     <div class="search-bar" id="searchBar">
-      <input type="search" placeholder="Search for jewelry, bags, accessories…" id="searchInput" oninput="searchProducts()" autocomplete="off" />
+      <input type="search" placeholder="Search for claw clips, brushes, mirrors…" id="searchInput" oninput="searchProducts()" autocomplete="off" />
       <button type="button" aria-label="Close search" onclick="toggleSearch()"><i class="fas fa-times"></i></button>
     </div>
   </header>
@@ -62,15 +62,7 @@
       <aside class="shop-sidebar">
         <div class="sidebar-block">
           <h4>Categories</h4>
-          <ul class="sidebar-cats" id="sidebarCats">
-            <li><a href="#" class="active" onclick="sidebarFilter('all',this)">All Products</a></li>
-            <li><a href="#" onclick="sidebarFilter('necklaces',this)">Necklaces</a></li>
-            <li><a href="#" onclick="sidebarFilter('rings',this)">Rings</a></li>
-            <li><a href="#" onclick="sidebarFilter('earrings',this)">Earrings</a></li>
-            <li><a href="#" onclick="sidebarFilter('bracelets',this)">Bracelets</a></li>
-            <li><a href="#" onclick="sidebarFilter('bags',this)">Bags</a></li>
-            <li><a href="#" onclick="sidebarFilter('accessories',this)">Accessories</a></li>
-          </ul>
+          <ul class="sidebar-cats" id="sidebarCats"></ul>
         </div>
         <div class="sidebar-block">
           <h4>Price Range</h4>
@@ -175,17 +167,28 @@
     window.addEventListener('DOMContentLoaded', async () => {
       productCache = await getProducts();
       const urlParams = new URLSearchParams(window.location.search);
-      const cat = urlParams.get('cat');
-      await renderShopGrid(cat || 'all');
-      if (cat) {
-        document.querySelectorAll('.sidebar-cats a').forEach(a => {
-          a.classList.remove('active');
-          if (a.getAttribute('onclick') && a.getAttribute('onclick').includes(cat)) {
-            a.classList.add('active');
-          }
-        });
-      }
+      const cat = urlParams.get('cat') || 'all';
+      renderSidebarCats(cat);
+      await renderShopGrid(cat);
     });
+
+    // Build the category sidebar from the shared taxonomy (parents + subcategories).
+    function renderSidebarCats(activeCat) {
+      const ul = document.getElementById('sidebarCats');
+      if (!ul) return;
+      const isActive = k => k === activeCat ? ' class="active"' : '';
+      let html = `<li><a href="#"${isActive('all')} onclick="sidebarFilter('all',this);return false;">All Products</a></li>`;
+      getCategories().forEach(g => {
+        html += `<li><a href="#"${isActive(g.key)} onclick="sidebarFilter('${g.key}',this);return false;">${escapeHtml(g.label)}</a>`;
+        if (g.subs.length) {
+          html += '<ul class="sidebar-subcats">' + g.subs.map(s =>
+            `<li><a href="#"${isActive(s.key)} onclick="sidebarFilter('${s.key}',this);return false;">${escapeHtml(s.label)}</a></li>`
+          ).join('') + '</ul>';
+        }
+        html += '</li>';
+      });
+      ul.innerHTML = html;
+    }
 
     function sidebarFilter(cat, el) {
       document.querySelectorAll('.sidebar-cats a').forEach(a => a.classList.remove('active'));
@@ -202,7 +205,7 @@
       const products = await getProducts();
       productCache = products;
       let filtered = products.filter(p => {
-        const catMatch = currentCat === 'all' || p.category === currentCat;
+        const catMatch = categoryMatches(p.category, currentCat);
         const priceMatch = Number(p.price) <= maxPrice;
         return catMatch && priceMatch;
       });
