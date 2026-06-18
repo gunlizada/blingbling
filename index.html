@@ -46,7 +46,7 @@
       </div>
     </nav>
     <div class="search-bar" id="searchBar">
-      <input type="search" placeholder="Search for jewelry, bags, accessories…" id="searchInput" oninput="searchProducts()" autocomplete="off" />
+      <input type="search" placeholder="Search for claw clips, brushes, mirrors…" id="searchInput" oninput="searchProducts()" autocomplete="off" />
       <button type="button" aria-label="Close search" onclick="toggleSearch()"><i class="fas fa-times"></i></button>
     </div>
   </header>
@@ -98,12 +98,10 @@
       </div>
       <div class="filter-bar">
         <button type="button" class="filter-btn active" onclick="filterProducts('all', this)">All</button>
-        <button type="button" class="filter-btn" onclick="filterProducts('necklaces', this)">Necklaces</button>
-        <button type="button" class="filter-btn" onclick="filterProducts('rings', this)">Rings</button>
-        <button type="button" class="filter-btn" onclick="filterProducts('earrings', this)">Earrings</button>
-        <button type="button" class="filter-btn" onclick="filterProducts('bracelets', this)">Bracelets</button>
-        <button type="button" class="filter-btn" onclick="filterProducts('bags', this)">Bags</button>
-        <button type="button" class="filter-btn" onclick="filterProducts('accessories', this)">Accessories</button>
+        <button type="button" class="filter-btn" onclick="filterProducts('claw-clips', this)">Claw Clips</button>
+        <button type="button" class="filter-btn" onclick="filterProducts('hairbrush', this)">Hairbrush</button>
+        <button type="button" class="filter-btn" onclick="filterProducts('vanity-case', this)">Vanity Case</button>
+        <button type="button" class="filter-btn" onclick="filterProducts('mirrors', this)">Mirrors</button>
       </div>
       <div class="products-grid" id="productsGrid">
         <!-- filled by JS -->
@@ -226,10 +224,10 @@
         <h4>Shop</h4>
         <ul>
           <li><a href="shop/shop.html">All products</a></li>
-          <li><a href="shop/shop.html?cat=necklaces">Necklaces</a></li>
-          <li><a href="shop/shop.html?cat=rings">Rings</a></li>
-          <li><a href="shop/shop.html?cat=earrings">Earrings</a></li>
-          <li><a href="shop/shop.html?cat=bags">Bags</a></li>
+          <li><a href="shop/shop.html?cat=claw-clips">Claw Clips</a></li>
+          <li><a href="shop/shop.html?cat=hairbrush">Hairbrush</a></li>
+          <li><a href="shop/shop.html?cat=vanity-case">Vanity Case</a></li>
+          <li><a href="shop/shop.html?cat=mirrors">Mirrors</a></li>
         </ul>
       </div>
       <div class="footer-links">
