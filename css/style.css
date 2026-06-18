@@ -254,22 +254,34 @@
     margin: 0 auto;
   }
   
-  .logo { display: flex; flex-direction: column; line-height: 1.05; }
-  
-  .logo-bling {
-    font-family: var(--font-display);
-    font-size: 1.45rem;
-    font-weight: 500;
-    color: var(--text-dark);
-    letter-spacing: 0.04em;
+  /* Blosta — paid/downloadable script font. Drop the file at
+     assets/fonts/Blosta.woff2 (and .ttf) to use the real thing.
+     Until then it gracefully falls back to "Great Vibes" (Google Fonts). */
+  @font-face {
+    font-family: 'Blosta';
+    src: url('../assets/fonts/Blosta.woff2') format('woff2'),
+         url('../assets/fonts/Blosta.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
   }
-  
-  .logo-baku {
-    font-family: var(--font-body);
-    font-size: 0.62rem;
-    font-weight: 600;
-    color: var(--text-light);
-    letter-spacing: 0.28em;
+
+  .logo { display: flex; flex-direction: row; align-items: baseline; gap: 0.3rem; line-height: 1; }
+
+  .logo-script {
+    font-family: 'Blosta', 'Great Vibes', cursive;
+    font-size: 2rem;
+    font-weight: 400;
+    color: var(--text-dark);
+    line-height: 1;
+  }
+
+  .logo-cinzel {
+    font-family: 'Cinzel Decorative', var(--font-display), serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    letter-spacing: 0.08em;
     text-transform: uppercase;
   }
   
@@ -1750,9 +1762,9 @@
     gap: clamp(2rem, 4vw, 3rem);
   }
   
-  .footer .logo-bling { color: var(--text-dark); }
-  
-  .footer .logo-baku { color: var(--text-light); }
+  .footer .logo-script { color: var(--text-dark); }
+
+  .footer .logo-cinzel { color: var(--text-light); }
   
   .footer-brand p {
     color: var(--text-mid);
