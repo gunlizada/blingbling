@@ -618,4 +618,91 @@ function checkoutWhatsApp() {
 function inquireProduct(id) {
   const p = productCache.find(x => String(x.id) === String(id));
   if (!p) return;
-  const msg = `Hello! I'm interested 
+  const msg = `Hello! I'm interested in: *${p.name}* — ${p.price} AZN. Is it available? 🌸`;
+  window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+function inquireProductFromModal() {
+  const modal = document.getElementById('productModal');
+  const p = modal.dataset.product ? JSON.parse(modal.dataset.product) : null;
+  if (!p) return;
+  const personalization = getSelectedModalPersonalization();
+  let msg = `Hello! I want to order this item:%0A*${p.name}* — ${p.price} AZN`;
+  if (personalization.engraving) msg += `%0AName/engraving: ${personalization.engraving}`;
+  if (personalization.colorLabel) msg += `%0AChain color: ${personalization.colorLabel}`;
+  if (personalization.diamond) msg += `%0ADiamond color: ${personalization.diamond}`;
+  msg += `%0A%0AIs this personalized version available? 🌸`;
+  window.open(`https://wa.me/${WA_NUMBER}?text=${msg}`, '_blank');
+}
+
+// ============================================================
+//  CONTACT FORM
+// ============================================================
+function submitInquiry(e) {
+  e.preventDefault();
+  const form = e.target;
+  const name = form.querySelector('[name="name"]')?.value?.trim() || '';
+  const phone = form.querySelector('[name="phone"]')?.value?.trim() || '';
+  const msg = form.querySelector('[name="message"]')?.value?.trim() || '';
+  const text = `Hello Bling Bling Baku,\n\nName: ${name}\nPhone: ${phone}\n\n${msg}`;
+  window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(text)}`, '_blank');
+}
+
+// ============================================================
+//  UI HELPERS
+// ============================================================
+function toggleMenu() { document.getElementById('navLinks')?.classList.toggle('open'); }
+
+// ============================================================
+//  SCROLL REVEAL — proper implementation
+// ============================================================
+let _scrollObserver = null;
+
+function initScrollReveal() {
+  // Section-level elements (not dynamically rendered)
+  const sectionTargets = document.querySelectorAll(
+    '.section-header, .promo-banner, .about-grid, .contact-grid, .footer-grid, .insta-strip, .page-hero.small'
+  );
+
+  _scrollObserver = new IntersectionObserver(
+    entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('revealed');
+          _scrollObserver.unobserve(entry.target);
+        }
+      });
+    },
+    { threshold: 0.05, rootMargin: '0px 0px -30px 0px' }
+  );
+
+  sectionTargets.forEach(el => {
+    if (el.classList.contains('section-header')) el.classList.add('reveal-header');
+    el.classList.add('reveal-on-scroll');
+    _scrollObserver.observe(el);
+  });
+}
+
+// Called after dynamic content (product cards, cat cards) is rendered
+function revealGridItems(containerSelector) {
+  if (!_scrollObserver) return;
+  const items = document.querySelectorAll(containerSelector);
+  items.forEach((el, i) => {
+    if (el.classList.contains('reveal-on-scroll')) return; // already observed
+    el.classList.add('reveal-on-scroll');
+    // Stagger: cycle through delay classes 1-6
+    const delayClass = `reveal-delay-${(i % 6) + 1}`;
+    el.classList.add(delayClass);
+    _scrollObserver.observe(el);
+  });
+}
+
+window.addEventListener('scroll', () => {
+  const h = document.getElementById('header');
+  if (h) h.style.boxShadow = window.scrollY > 40 ? '0 2px 20px rgba(0,0,0,0.08)' : '';
+});
+
+// Spinner CSS
+const spinStyle = document.createElement('style');
+spinStyle.textContent = '@keyframes spin { to { transform: rotate(360deg); } }';
+document.head.appendChild(spinStyle);
