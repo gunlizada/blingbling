@@ -441,26 +441,31 @@
     background-repeat: no-repeat, no-repeat;
   }
 
+  /* Full-bleed: ignore the centered container so the copy can sit hard left. */
   .hero__inner {
     position: relative;
     z-index: 2;
     display: block;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding-inline: clamp(1.5rem, 6vw, 6rem);
     padding-block: clamp(3.5rem, 12vh, 6rem);
   }
 
   .hero__copy {
-    max-width: 34rem;
+    max-width: 44rem;
   }
 
   .hero__title {
     font-family: 'Bebas Neue', var(--font-display), sans-serif;
     font-weight: 400;
-    font-size: clamp(3.1rem, 7.5vw, 6rem);
-    line-height: 0.96;
-    letter-spacing: 0.01em;
+    font-size: clamp(2rem, 4vw, 3.3rem);
+    line-height: 1.04;
+    letter-spacing: 0.015em;
     text-transform: uppercase;
     color: #7b5560;
-    margin-bottom: 1.75rem;
+    margin-bottom: 1.5rem;
   }
 
   .hero__cta {
