@@ -414,64 +414,22 @@
   /* ============================================================
      HERO
      ============================================================ */
+  /* Hero is a single pre-composed banner image, clickable through to the shop. */
   .hero {
     position: relative;
-    min-height: min(86vh, 820px);
-    display: flex;
-    align-items: center;
     overflow: hidden;
     background: var(--pink-whisper);
   }
 
-  /* Full-bleed model photo, anchored right; a soft cream gradient on the left
-     keeps the headline legible at any screen width. */
-  .hero__bg {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    background-image:
-      linear-gradient(90deg,
-        rgba(247, 239, 240, 0.97) 0%,
-        rgba(247, 239, 240, 0.78) 26%,
-        rgba(247, 239, 240, 0.30) 46%,
-        rgba(247, 239, 240, 0) 62%),
-      url('../assets/hero.png');
-    background-size: cover, cover;
-    background-position: left center, right center;
-    background-repeat: no-repeat, no-repeat;
-  }
-
-  /* Full-bleed: ignore the centered container so the copy can sit hard left. */
-  .hero__inner {
-    position: relative;
-    z-index: 2;
+  .hero__banner {
     display: block;
     width: 100%;
-    max-width: none;
-    margin: 0;
-    padding-inline: clamp(1.5rem, 6vw, 6rem);
-    padding-block: clamp(3.5rem, 12vh, 6rem);
   }
 
-  .hero__copy {
-    max-width: 44rem;
-  }
-
-  .hero__title {
-    font-family: 'Bebas Neue', var(--font-display), sans-serif;
-    font-weight: 400;
-    font-size: clamp(2rem, 4vw, 3.3rem);
-    line-height: 1.04;
-    letter-spacing: 0.015em;
-    text-transform: uppercase;
-    color: #7b5560;
-    margin-bottom: 1.5rem;
-  }
-
-  .hero__cta {
-    font-family: 'Bebas Neue', var(--font-body), sans-serif;
-    letter-spacing: 0.12em;
-    font-size: 1rem;
+  .hero__banner img {
+    display: block;
+    width: 100%;
+    height: auto;
   }
 
   /* PAGE HERO SMALL */
@@ -1804,9 +1762,6 @@
      RESPONSIVE
      ============================================================ */
   @media (max-width: 1024px) {
-    .hero { min-height: min(72vh, 620px); }
-    .hero__bg { background-position: left center, 80% center; }
-    .hero__copy { max-width: 26rem; }
 
     .promo-banner__grid { grid-template-columns: 1fr; }
     .promo-banner__col--accent { border-left: none; border-top: 1px solid var(--border); }
@@ -1858,9 +1813,6 @@
     .nav-links.open { display: flex; }
   
     .menu-toggle { display: flex; }
-  
-    .hero { min-height: min(78vh, 560px); }
-    .hero__bg { background-position: left center, 86% center; }
 
     .footer-grid { grid-template-columns: 1fr; }
   
