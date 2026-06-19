@@ -307,6 +307,22 @@ function closeModal() {
   document.body.style.overflow = '';
 }
 
+function openFounderModal() {
+  document.getElementById('founderOverlay').classList.add('open');
+  document.getElementById('founderModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeFounderModal() {
+  document.getElementById('founderOverlay').classList.remove('open');
+  document.getElementById('founderModal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeFounderModal();
+});
+
 function switchModalImg(i, thumb, images) {
   const el = document.getElementById('modalMainImgEl');
   if (el && images[i]) el.src = images[i];
