@@ -1,621 +1,196 @@
 // ============================================================
-//  BLING BLING BAKU — Main JS (Supabase version)
+//  BLING BLING BAKU — Products (Supabase)
+//  All data comes from Supabase database — real & global
 // ============================================================
 
-let cart = JSON.parse(localStorage.getItem('bbb_cart') || '[]');
-let productCache = []; // in-memory cache after first load
-
-function isProductInactive(productId) {
-  const pr = productCache.find(x => String(x.id) === String(productId));
-  return !!(pr && pr.active === false);
+// ---- HTML ESCAPE (prevents XSS when rendering DB/user text into the DOM) ----
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
-function cartContainsInactiveProduct() {
-  return cart.some(item => isProductInactive(item.id));
+// ---- FETCH PRODUCTS FOR SHOP & HOME (includes inactive — inactive shows as sold out, no WhatsApp order) ----
+async function getProducts() {
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error) { console.error('getProducts error:', error); return []; }
+  return data || [];
 }
 
-function syncCartCheckoutWhatsAppButton() {
-  const waBtn = document.getElementById('cartCheckoutBtn');
-  if (!waBtn) return;
-  const blocked = cart.length > 0 && cartContainsInactiveProduct();
-  waBtn.disabled = !cart.length || blocked;
-  waBtn.title = blocked ? 'Remove unavailable pieces from your bag to order' : '';
-}
-const PERSONALIZATION_DIAMOND_COLORS = [
-  { name: 'White', hex: '#f4f4f4' },
-  { name: 'Black', hex: '#24242c' },
-  { name: 'Sky Blue', hex: '#74ccff' },
-  { name: 'Emerald', hex: '#2ea57d' },
-  { name: 'Lavender', hex: '#cdbdff' },
-  { name: 'Pink', hex: '#f05f95' },
-  { name: 'Ruby', hex: '#ff4d6d' },
-  { name: 'Honey', hex: '#f4b338' },
-  { name: 'Olive', hex: '#93a63f' },
-  { name: 'Sapphire', hex: '#2f4fa6' }
-];
-
-// ============================================================
-//  INIT
-// ============================================================
-document.addEventListener('DOMContentLoaded', async () => {
-  initSupabase();
-  updateCartBadge();
-  renderCategories();
-  initScrollReveal(); // init observer early — section elements exist at this point
-  await loadAndRenderHome();
-  loadAndRenderLookbooks();
-  syncCartCheckoutWhatsAppButton();
-});
-
-// ============================================================
-//  CATEGORIES
-// ============================================================
-function renderCategories() {
-  const el = document.getElementById('catGrid');
-  if (!el) return;
-  el.innerHTML = getCategories().map(c => `
-    <div class="cat-card" role="link" tabindex="0" onclick="window.location.href='shop/shop.html?cat=${c.key}'" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.location.href='shop/shop.html?cat=${c.key}';}">
-      <div class="cat-card__surface">
-        <span class="cat-card__icon" aria-hidden="true"><i class="${c.icon}"></i></span>
-        <span class="cat-card__name">${c.label}</span>
-        <span class="cat-card__hint">View edit</span>
-      </div>
-    </div>`).join('');
-  // Reveal cat cards after they're in the DOM
-  requestAnimationFrame(() => revealGridItems('#catGrid .cat-card'));
+// ---- FETCH ALL PRODUCTS (admin, includes inactive) ----
+async function getAllProducts() {
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error) { console.error('getAllProducts error:', error); return []; }
+  return data || [];
 }
 
-// ============================================================
-//  HOME — load products from Supabase
-// ============================================================
-async function loadAndRenderHome() {
-  const grid = document.getElementById('productsGrid');
-  if (!grid) return;
-  grid.innerHTML = loadingHTML();
-  productCache = await getProducts();
-  renderProductGrid(grid, productCache.slice(0, 8));
+// ---- FETCH SINGLE PRODUCT ----
+async function getProduct(id) {
+  const { data, error } = await supabase
+    .from('products').select('*').eq('id', id).single();
+  if (error) { console.error('getProduct error:', error); return null; }
+  return data;
 }
 
-function renderProductGrid(grid, products) {
-  grid.innerHTML = products.length
-    ? products.map(p => productCard(p)).join('')
-    : '<p class="no-products" style="grid-column:1/-1;text-align:center;padding:60px;color:var(--text-light)">No products yet. Check back soon! ✦</p>';
-  // Reveal product cards after they're in the DOM
-  requestAnimationFrame(() => revealGridItems('#productsGrid .product-card, #shopGrid .product-card'));
+// ---- CREATE PRODUCT ----
+async function createProduct(product) {
+  const { data, error } = await supabase
+    .from('products').insert([product]).select().single();
+  if (error) return { error };
+  return { data };
 }
 
-function loadingHTML() {
-  return Array(4).fill(0).map(() => `
-    <div class="product-card" style="pointer-events:none">
-      <div class="product-img" style="background:var(--pink-pale);display:flex;align-items:center;justify-content:center;min-height:260px">
-        <div style="width:40px;height:40px;border:3px solid var(--pink-light);border-top-color:var(--pink-deep);border-radius:50%;animation:spin 0.8s linear infinite"></div>
-      </div>
-      <div class="product-info">
-        <div style="height:12px;background:var(--pink-pale);border-radius:6px;margin-bottom:8px"></div>
-        <div style="height:18px;background:var(--pink-pale);border-radius:6px;margin-bottom:8px;width:70%"></div>
-        <div style="height:14px;background:var(--pink-pale);border-radius:6px;width:40%"></div>
-      </div>
-    </div>`).join('');
+// ---- UPDATE PRODUCT ----
+async function updateProduct(id, updates) {
+  const { data, error } = await supabase
+    .from('products').update(updates).eq('id', id).select().single();
+  if (error) return { error };
+  return { data };
+}
+
+// ---- DELETE PRODUCT ----
+async function deleteProductById(id) {
+  const { error } = await supabase.from('products').delete().eq('id', id);
+  if (error) return { error };
+  return { success: true };
+}
+
+// ---- UPLOAD IMAGE to Supabase Storage ----
+async function uploadProductImage(file) {
+  const ext = file.name.split('.').pop().toLowerCase();
+  const fileName = `product_${Date.now()}_${Math.random().toString(36).substr(2,6)}.${ext}`;
+  const { error } = await supabase.storage
+    .from('product-images')
+    .upload(fileName, file, { cacheControl: '3600', upsert: false });
+  if (error) { console.error('Upload error:', error); return null; }
+  const { data } = supabase.storage.from('product-images').getPublicUrl(fileName);
+  return data.publicUrl;
 }
 
 // ============================================================
-//  LOOKBOOKS
+//  LOOKBOOKS (Supabase)
 // ============================================================
-let lookbookCache = [];
 
-async function loadAndRenderLookbooks() {
-  const section = document.getElementById('lookbook');
-  const grid = document.getElementById('lookbookGrid');
-  if (!grid || !section) return;
-
-  lookbookCache = await getLookbooks();
-  const visible = lookbookCache.filter(l => l.active !== false);
-
-  // No lookbooks at all → hide the whole section so the page stays clean.
-  if (!visible.length) { section.style.display = 'none'; return; }
-  section.style.display = '';
-
-  grid.innerHTML = visible.map(l => lookbookCard(l)).join('');
-  requestAnimationFrame(() => revealGridItems('#lookbookGrid .lookbook-card'));
+// ---- FETCH LOOKBOOKS (storefront + admin) ----
+async function getLookbooks() {
+  const { data, error } = await supabase
+    .from('lookbooks')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error) { console.error('getLookbooks error:', error); return []; }
+  return data || [];
 }
 
-function lookbookCard(l) {
-  const photos = Array.isArray(l.photos) ? l.photos : [];
-  const hasGallery = photos.length > 0;
-  const id    = escapeHtml(l.id);
-  const title = escapeHtml(l.title || '');
-  const cover = l.cover
-    ? `<img src="${escapeHtml(l.cover)}" alt="${title}" loading="lazy" />`
-    : `<div class="no-img"><i class="fas fa-camera-retro"></i></div>`;
+// ---- FETCH SINGLE LOOKBOOK ----
+async function getLookbook(id) {
+  const { data, error } = await supabase
+    .from('lookbooks').select('*').eq('id', id).single();
+  if (error) { console.error('getLookbook error:', error); return null; }
+  return data;
+}
 
-  if (hasGallery) {
-    return `
-    <article class="lookbook-card is-clickable" role="button" tabindex="0"
-             onclick="openLookbook('${id}')"
-             onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openLookbook('${id}');}">
-      <div class="lookbook-cover">${cover}
-        <div class="lookbook-cover__overlay">
-          <span class="lookbook-cover__view"><i class="fas fa-images"></i> View lookbook</span>
-        </div>
-      </div>
-      <div class="lookbook-meta">
-        <h3 class="lookbook-title">${title}</h3>
-        <span class="lookbook-count">${photos.length} photo${photos.length > 1 ? 's' : ''}</span>
-      </div>
-    </article>`;
+// ---- UPLOAD LOOKBOOK IMAGE (reuses the product-images bucket) ----
+async function uploadLookbookImage(file) {
+  const ext = file.name.split('.').pop().toLowerCase();
+  const fileName = `lookbook_${Date.now()}_${Math.random().toString(36).substr(2,6)}.${ext}`;
+  const { error } = await supabase.storage
+    .from('product-images')
+    .upload(fileName, file, { cacheControl: '3600', upsert: false });
+  if (error) { console.error('Lookbook upload error:', error); return null; }
+  const { data } = supabase.storage.from('product-images').getPublicUrl(fileName);
+  return data.publicUrl;
+}
+
+// ---- CATEGORIES ----
+// Parent categories with optional subcategories. A product's `category` field
+// stores a LEAF key (e.g. 'mini-claw-clips'), or the parent key when the parent
+// has no subcategories (e.g. 'vanity-case'). No DB schema change needed.
+function getCategories() {
+  return [
+    { key: 'claw-clips', label: 'Claw Clips', icon: 'fas fa-hand-sparkles', subs: [
+      { key: 'mini-claw-clips',  label: 'Mini Claw Clips' },
+      { key: 'large-claw-clips', label: 'Large Claw Clips' }
+    ] },
+    { key: 'hairbrush', label: 'Hairbrush', icon: 'fas fa-brush', subs: [
+      { key: 'large-hairbrush', label: 'Large Hairbrush' },
+      { key: 'small-hairbrush', label: 'Small Hairbrush' },
+      { key: 'hair-comb',       label: 'Hair Comb' }
+    ] },
+    { key: 'vanity-case', label: 'Vanity Case', icon: 'fas fa-suitcase', subs: [] },
+    { key: 'mirrors', label: 'Mirrors', icon: 'fas fa-compact-disc', subs: [
+      { key: 'hand-mirrors',    label: 'Hand Mirrors' },
+      { key: '2-in-1-mirrors',  label: '2 in 1 Mirrors' }
+    ] }
+  ];
+}
+
+// All leaf category keys a filter key represents. A parent expands to its subs
+// (or itself if it has none); a leaf/sub key returns itself.
+function leafKeysForCategory(key) {
+  const g = getCategories().find(x => x.key === key);
+  if (g) return g.subs.length ? g.subs.map(s => s.key) : [g.key];
+  return [key];
+}
+
+// Does a product's stored category match the selected filter key?
+function categoryMatches(productCategory, filterKey) {
+  if (!filterKey || filterKey === 'all') return true;
+  return leafKeysForCategory(filterKey).includes(productCategory);
+}
+
+// Human-friendly label for a stored category key (parent or sub).
+function categoryLabel(key) {
+  for (const g of getCategories()) {
+    if (g.key === key) return g.label;
+    const s = g.subs.find(x => x.key === key);
+    if (s) return s.label;
   }
-
-  // No photos → cover-only, NOT clickable.
-  return `
-    <article class="lookbook-card is-static" aria-disabled="true">
-      <div class="lookbook-cover">${cover}</div>
-      <div class="lookbook-meta">
-        <h3 class="lookbook-title">${title}</h3>
-        <span class="lookbook-count lookbook-count--soon">Coming soon</span>
-      </div>
-    </article>`;
+  return key || '';
 }
 
-function openLookbook(id) {
-  const l = lookbookCache.find(x => String(x.id) === String(id));
-  if (!l) return;
-  const photos = Array.isArray(l.photos) ? l.photos : [];
-  if (!photos.length) return; // safety: cover-only lookbooks aren't openable
-
-  document.getElementById('lookbookModalTitle').textContent = l.title || 'Lookbook';
-  document.getElementById('lookbookModalCount').textContent =
-    `${photos.length} photo${photos.length > 1 ? 's' : ''}`;
-  document.getElementById('lookbookModalGrid').innerHTML = photos.map((src, i) => `
-    <figure class="lb-photo">
-      <img src="${escapeHtml(src)}" alt="${escapeHtml(l.title || 'Lookbook')} — photo ${i + 1}" loading="lazy" />
-    </figure>`).join('');
-
-  document.getElementById('lookbookOverlay').classList.add('open');
-  document.getElementById('lookbookModal').classList.add('open');
-  document.body.style.overflow = 'hidden';
-}
-
-function closeLookbook() {
-  const overlay = document.getElementById('lookbookOverlay');
-  const modal = document.getElementById('lookbookModal');
-  if (!overlay || !modal) return;
-  overlay.classList.remove('open');
-  modal.classList.remove('open');
-  document.body.style.overflow = '';
-}
-
-function colorLabel(hex, fallback = 'Custom tone') {
-  if (!hex) return fallback;
-  const normalized = String(hex).toLowerCase();
-  const map = {
-    '#d4af37': 'Gold',
-    '#c0c0c0': 'Silver',
-    '#b76e79': 'Rose Gold',
-    '#ffd700': 'Gold',
-    '#f1c27d': 'Champagne',
-    '#ffffff': 'White',
-    '#000000': 'Black'
-  };
-  return map[normalized] || fallback;
-}
-
-// ============================================================
-//  FILTER (home page buttons)
-// ============================================================
-async function filterProducts(cat, btn) {
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  const grid = document.getElementById('productsGrid');
-  if (!grid) return;
-  if (!productCache.length) productCache = await getProducts();
-  const filtered = cat === 'all' ? productCache : productCache.filter(p => categoryMatches(p.category, cat));
-  renderProductGrid(grid, filtered);
-}
-
-// ============================================================
-//  SEARCH
-// ============================================================
-function toggleSearch() {
-  const bar = document.getElementById('searchBar');
-  bar.classList.toggle('open');
-  if (bar.classList.contains('open')) document.getElementById('searchInput').focus();
-}
-
-async function searchProducts() {
-  const q = document.getElementById('searchInput').value.toLowerCase().trim();
-  const grid = document.getElementById('productsGrid') || document.getElementById('shopGrid');
-  if (!grid) return;
-
-  if (!q) {
-    if (!productCache.length) productCache = await getProducts();
-    renderProductGrid(grid, productCache.slice(0, 8));
-    return;
-  }
-
-  if (!productCache.length) productCache = await getProducts();
-  const results = productCache.filter(p =>
-    p.name.toLowerCase().includes(q) ||
-    categoryLabel(p.category).toLowerCase().includes(q) ||
-    (p.category && p.category.toLowerCase().includes(q)) ||
-    (p.description && p.description.toLowerCase().includes(q))
-  );
-
-  grid.innerHTML = results.length
-    ? results.map(p => productCard(p)).join('')
-    : `<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--text-light)">
-        <i class="fas fa-search" style="font-size:2rem;display:block;margin-bottom:14px;color:var(--pink-light)"></i>
-        <p>No results for <strong style="color:var(--text-mid)">"${escapeHtml(q)}"</strong></p>
-       </div>`;
-}
-
-// ============================================================
-//  PRODUCT MODAL
-// ============================================================
-async function openModal(id) {
-  document.getElementById('modalOverlay').classList.add('open');
-  document.getElementById('productModal').classList.add('open');
-  document.getElementById('modalBody').innerHTML = `
-    <div style="display:flex;align-items:center;justify-content:center;min-height:400px;width:100%">
-      <div style="width:40px;height:40px;border:3px solid var(--pink-light);border-top-color:var(--pink-deep);border-radius:50%;animation:spin 0.8s linear infinite"></div>
-    </div>`;
-  document.body.style.overflow = 'hidden';
-
-  let p = productCache.find(x => String(x.id) === String(id));
-  if (!p) p = await getProduct(id);
-  if (!p) { closeModal(); return; }
-
+// ---- RENDER PRODUCT CARD HTML ----
+function productCard(p) {
+  const isInactive = p.active === false;
+  const showSoldOutBadge = isInactive;
+  const canAddToBag = !isInactive;
+  const showWhatsApp = !isInactive;
   const images = Array.isArray(p.images) ? p.images : [];
   const colors = Array.isArray(p.colors) ? p.colors : [];
-
-  const chainColorBtns = colors.map((c, i) => `
-    <button
-      class="modal-color-btn ${i===0?'selected':''}"
-      style="background:${c}"
-      data-color="${c}"
-      data-color-label="${colorLabel(c)}"
-      onclick="selectModalColor(this)"
-      title="${colorLabel(c)}"
-      aria-label="${colorLabel(c)}"
-    ></button>`).join('');
-
-  const diamondColorBtns = PERSONALIZATION_DIAMOND_COLORS.map((c, i) => `
-    <button
-      class="modal-color-btn modal-color-btn--diamond ${i===0?'selected':''}"
-      style="background:${c.hex}"
-      data-diamond-color="${c.name}"
-      data-diamond-hex="${c.hex}"
-      onclick="selectDiamondColor(this)"
-      title="${c.name}"
-      aria-label="${c.name}"
-    ></button>`).join('');
-
-  const isInactive = p.active === false;
-  const isSoldOut = isInactive;
-
-  const modalPersonalizeBlock = !isInactive
-    ? `<div class="modal-personalize">
-        <div class="modal-personalize-note">
-          <i class="fas fa-stars" aria-hidden="true"></i>
-          <span>Personalized piece prepared specially for you</span>
-        </div>
-        <div class="modal-engraving">
-          <h5>Engraving (10 characters max)</h5>
-          <input
-            id="modalEngraving"
-            class="modal-engraving-input"
-            type="text"
-            maxlength="10"
-            placeholder="EMILIA"
-            oninput="updateEngravingCounter()"
-          />
-          <p class="modal-engraving-help">Letters, numbers, and emojis are supported.</p>
-          <span class="modal-engraving-counter" id="modalEngravingCounter">0 / 10</span>
-        </div>
-        ${chainColorBtns ? `<div class="modal-colors"><h5>Chain Color</h5><div class="modal-color-opts">${chainColorBtns}</div></div>` : ''}
-        <div class="modal-colors">
-          <h5>Diamond Color</h5>
-          <div class="modal-color-opts">${diamondColorBtns}</div>
-        </div>
-      </div>`
-    : '';
-
-  const modalQtyBlock = !isInactive
-    ? `<div class="modal-qty">
-        <h5>Quantity</h5>
-        <div class="modal-qty-controls">
-          <button type="button" class="qty-btn" onclick="changeModalQty(-1)">−</button>
-          <span class="modal-qty-val" id="modalQtyVal">1</span>
-          <button type="button" class="qty-btn" onclick="changeModalQty(1)">+</button>
-        </div>
-      </div>`
-    : '';
-
-  const stockLineText = isInactive
-    ? 'Sold out'
-    : 'Available to order';
-
-  const addToBagBtn = !isSoldOut
-    ? `<button type="button" class="btn btn-primary" onclick="addToCartFromModal()"><i class="fas fa-shopping-bag"></i> Add to Bag</button>`
-    : '';
-
-  const whatsappModalBtn = !isInactive
-    ? `<button type="button" class="btn btn-outline" onclick="inquireProductFromModal()">
-          <i class="fab fa-whatsapp"></i> Ask on WhatsApp
-        </button>`
-    : '';
-
-  const mainImg = images.length
-    ? `<img src="${escapeHtml(images[0])}" alt="${escapeHtml(p.name)}" id="modalMainImgEl" style="max-width:100%;max-height:380px;object-fit:contain"/>`
+  const id      = escapeHtml(p.id);
+  const name    = escapeHtml(p.name);
+  const imgContent = images.length
+    ? `<img src="${escapeHtml(images[0])}" alt="${name}" loading="lazy" />`
     : `<div class="no-img"><i class="fas fa-gem"></i></div>`;
-
-  const thumbs = images.length > 1
-    ? images.map((img, i) => `
-        <div class="modal-thumb ${i===0?'active':''}" onclick="switchModalImg(${i}, this, ${JSON.stringify(images).replace(/"/g,'&quot;')})">
-          <img src="${img}" alt="" /></div>`).join('') : '';
-
-  const oldPrice = p.old_price ? `<span class="old-price" style="text-decoration:line-through;color:var(--text-light);font-size:1rem;margin-right:8px">${p.old_price} AZN</span>` : '';
-
-  // Store product data on modal for cart use
-  document.getElementById('productModal').dataset.product = JSON.stringify({
-    id: p.id,
-    name: p.name,
-    price: p.price,
-    image: images[0] || null,
-    quantity: p.quantity,
-    inactive: isInactive
-  });
-
-  document.getElementById('modalBody').innerHTML = `
-    <div class="modal-gallery">
-      <div class="modal-main-img">${mainImg}</div>
-      ${thumbs ? `<div class="modal-thumbs">${thumbs}</div>` : ''}
-    </div>
-    <div class="modal-info">
-      <div class="modal-cat">${escapeHtml(categoryLabel(p.category))}</div>
-      <div class="modal-name">${escapeHtml(p.name)}</div>
-      <div class="modal-price">${oldPrice}${escapeHtml(p.price)} AZN</div>
-      <p class="modal-desc">${escapeHtml(p.description || '')}</p>
-      ${modalPersonalizeBlock}
-      ${modalQtyBlock}
-      <p class="modal-stock ${isSoldOut ? 'out' : 'in'}">
-        <i class="fas fa-circle" style="font-size:0.5rem;margin-right:5px"></i>
-        ${stockLineText}
-      </p>
-      <div class="modal-actions">
-        ${addToBagBtn}
-        ${whatsappModalBtn}
+  const colorDots = colors.length
+    ? `<div class="product-colors">${colors.map(c => `<span class="color-dot" style="background:${escapeHtml(c)}"></span>`).join('')}</div>` : '';
+  const badge    = p.badge ? `<div class="product-badge">${escapeHtml(p.badge)}</div>` : '';
+  const oos      = showSoldOutBadge ? `<div class="out-of-stock-badge">Sold Out</div>` : '';
+  const oldPrice = p.old_price ? `<span class="old-price">${escapeHtml(p.old_price)} AZN</span>` : '';
+  return `
+  <article class="product-card" onclick="openModal('${id}')">
+    <div class="product-img">${imgContent}${badge}${oos}
+      <div class="product-actions">
+        <button type="button" title="Quick view" onclick="event.stopPropagation();openModal('${id}')"><i class="fas fa-eye"></i></button>
+        ${canAddToBag ? `<button type="button" title="Add to bag" onclick="event.stopPropagation();addToCart('${id}')"><i class="fas fa-shopping-bag"></i></button>` : ''}
+        ${showWhatsApp ? `<button type="button" title="WhatsApp" onclick="event.stopPropagation();inquireProduct('${id}')"><i class="fab fa-whatsapp"></i></button>` : ''}
       </div>
-    </div>`;
+    </div>
+    <div class="product-info">
+      <div class="product-cat">${escapeHtml(categoryLabel(p.category))}</div>
+      <h3 class="product-name">${name}</h3>
+      <div class="product-price">${oldPrice}${escapeHtml(p.price)} AZN</div>
+      ${colorDots}
+      <span class="product-cta">View piece</span>
+    </div>
+  </article>`;
 }
-
-function closeModal() {
-  document.getElementById('modalOverlay').classList.remove('open');
-  document.getElementById('productModal').classList.remove('open');
-  document.body.style.overflow = '';
-}
-
-function openFounderModal() {
-  document.getElementById('founderOverlay').classList.add('open');
-  document.getElementById('founderModal').classList.add('open');
-  document.body.style.overflow = 'hidden';
-}
-
-function closeFounderModal() {
-  document.getElementById('founderOverlay').classList.remove('open');
-  document.getElementById('founderModal').classList.remove('open');
-  document.body.style.overflow = '';
-}
-
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') { closeFounderModal(); closeLookbook(); }
-});
-
-function switchModalImg(i, thumb, images) {
-  const el = document.getElementById('modalMainImgEl');
-  if (el && images[i]) el.src = images[i];
-  document.querySelectorAll('.modal-thumb').forEach((t, idx) => t.classList.toggle('active', idx === i));
-}
-
-function selectModalColor(btn) {
-  document.querySelectorAll('.modal-color-btn:not(.modal-color-btn--diamond)').forEach(b => b.classList.remove('selected'));
-  btn.classList.add('selected');
-}
-
-function selectDiamondColor(btn) {
-  document.querySelectorAll('.modal-color-btn--diamond').forEach(b => b.classList.remove('selected'));
-  btn.classList.add('selected');
-}
-
-function updateEngravingCounter() {
-  const input = document.getElementById('modalEngraving');
-  const counter = document.getElementById('modalEngravingCounter');
-  if (!input || !counter) return;
-  // Keep engraving style consistent and premium-looking.
-  input.value = (input.value || '').toUpperCase();
-  const val = input.value || '';
-  counter.textContent = `${val.length} / 10`;
-}
-
-function getSelectedModalPersonalization() {
-  const selectedColor = document.querySelector('.modal-color-btn.selected:not(.modal-color-btn--diamond)');
-  const selectedDiamond = document.querySelector('.modal-color-btn--diamond.selected');
-  const engravingInput = document.getElementById('modalEngraving');
-  return {
-    color: selectedColor ? selectedColor.dataset.color || selectedColor.style.background : null,
-    colorLabel: selectedColor ? selectedColor.dataset.colorLabel || colorLabel(selectedColor.dataset.color || selectedColor.style.background) : null,
-    diamond: selectedDiamond ? selectedDiamond.dataset.diamondColor || null : null,
-    diamondHex: selectedDiamond ? selectedDiamond.dataset.diamondHex || null : null,
-    engraving: (engravingInput?.value || '').trim().toUpperCase()
-  };
-}
-
-let _modalQty = 1;
-function changeModalQty(delta) {
-  const modal = document.getElementById('productModal');
-  const p = modal.dataset.product ? JSON.parse(modal.dataset.product) : null;
-  const q = p ? Number(p.quantity) : 0;
-  const max = q > 0 ? q : 99;
-  _modalQty = Math.max(1, Math.min(max, _modalQty + delta));
-  const el = document.getElementById('modalQtyVal');
-  if (el) el.textContent = _modalQty;
-}
-
-function addToCartFromModal() {
-  const modal = document.getElementById('productModal');
-  const p = modal.dataset.product ? JSON.parse(modal.dataset.product) : null;
-  if (!p || p.inactive || p.hidden) return;
-  const personalization = getSelectedModalPersonalization();
-  addToCartItem(p.id, p.name, p.price, p.image, _modalQty, {
-    color: personalization.color,
-    colorLabel: personalization.colorLabel,
-    diamond: personalization.diamond,
-    diamondHex: personalization.diamondHex,
-    engraving: personalization.engraving
-  });
-  _modalQty = 1;
-  closeModal();
-}
-
-// ============================================================
-//  CART (still localStorage — cart is per-browser which is correct)
-// ============================================================
-function addToCart(id) {
-  const p = productCache.find(x => String(x.id) === String(id));
-  if (!p || p.active === false) return;
-  const images = Array.isArray(p.images) ? p.images : [];
-  addToCartItem(p.id, p.name, p.price, images[0] || null, 1, {
-    color: null,
-    colorLabel: null,
-    diamond: null,
-    diamondHex: null,
-    engraving: ''
-  });
-}
-
-function addToCartItem(id, name, price, image, qty, personalization = {}) {
-  const normalizedPersonalization = {
-    color: personalization.color || null,
-    colorLabel: personalization.colorLabel || null,
-    diamond: personalization.diamond || null,
-    diamondHex: personalization.diamondHex || null,
-    engraving: personalization.engraving || ''
-  };
-  const existing = cart.find(
-    i =>
-      String(i.id) === String(id) &&
-      i.color === normalizedPersonalization.color &&
-      i.diamond === normalizedPersonalization.diamond &&
-      i.engraving === normalizedPersonalization.engraving
-  );
-  if (existing) { existing.qty += qty; }
-  else {
-    cart.push({
-      id: String(id),
-      name,
-      price,
-      qty,
-      color: normalizedPersonalization.color,
-      colorLabel: normalizedPersonalization.colorLabel,
-      diamond: normalizedPersonalization.diamond,
-      diamondHex: normalizedPersonalization.diamondHex,
-      engraving: normalizedPersonalization.engraving,
-      image
-    });
-  }
-  localStorage.setItem('bbb_cart', JSON.stringify(cart));
-  updateCartBadge();
-  renderCartItems();
-  openCartDrawer();
-}
-
-function updateCartBadge() {
-  const count = cart.reduce((s, i) => s + i.qty, 0);
-  document.querySelectorAll('#cartCount').forEach(el => el.textContent = count);
-  syncCartCheckoutWhatsAppButton();
-}
-
-function renderCartItems() {
-  const el = document.getElementById('cartItems');
-  if (!el) return;
-  if (!cart.length) {
-    el.innerHTML = `<div class="cart-empty"><i class="fas fa-shopping-bag"></i><p>Your bag is empty</p></div>`;
-  } else {
-    el.innerHTML = cart.map((item, idx) => `
-      <div class="cart-item">
-        <div class="cart-item-img">
-          ${item.image ? `<img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}" />` : `<i class="fas fa-gem" style="color:var(--pink-light);font-size:1.5rem"></i>`}
-        </div>
-        <div class="cart-item-info">
-          <div class="cart-item-name">${escapeHtml(item.name)}</div>
-          ${(item.color || item.diamond || item.engraving) ? `
-            <div class="cart-item-personalization">
-              ${item.engraving ? `<span class="cart-personal-chip">Engraving: ${escapeHtml(item.engraving)}</span>` : ''}
-              ${item.color ? `<span class="cart-personal-chip"><span class="cart-personal-dot" style="background:${escapeHtml(item.color)}"></span>Chain: ${escapeHtml(item.colorLabel || 'Custom')}</span>` : ''}
-              ${item.diamond ? `<span class="cart-personal-chip"><span class="cart-personal-dot" style="background:${escapeHtml(item.diamondHex || '#f4f4f4')}"></span>Diamond: ${escapeHtml(item.diamond)}</span>` : ''}
-            </div>
-          ` : ''}
-          <div class="cart-item-price">${(item.price * item.qty).toFixed(2)} AZN</div>
-          <div class="cart-item-controls">
-            <button class="qty-btn" onclick="updateCartQty(${idx},-1)">−</button>
-            <span class="qty-val">${item.qty}</span>
-            <button class="qty-btn" onclick="updateCartQty(${idx},1)">+</button>
-          </div>
-        </div>
-        <button class="cart-item-remove" onclick="removeFromCart(${idx})"><i class="fas fa-trash-alt"></i></button>
-      </div>`).join('');
-  }
-  const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
-  const totalEl = document.getElementById('cartTotal');
-  if (totalEl) totalEl.textContent = total.toFixed(2) + ' AZN';
-  syncCartCheckoutWhatsAppButton();
-}
-
-function updateCartQty(idx, delta) {
-  cart[idx].qty = Math.max(1, cart[idx].qty + delta);
-  localStorage.setItem('bbb_cart', JSON.stringify(cart));
-  updateCartBadge(); renderCartItems();
-}
-
-function removeFromCart(idx) {
-  cart.splice(idx, 1);
-  localStorage.setItem('bbb_cart', JSON.stringify(cart));
-  updateCartBadge(); renderCartItems();
-}
-
-function toggleCart() {
-  const drawer = document.getElementById('cartDrawer');
-  const overlay = document.getElementById('cartOverlay');
-  if (drawer.classList.contains('open')) {
-    drawer.classList.remove('open'); overlay.classList.remove('open');
-  } else { openCartDrawer(); }
-}
-
-function openCartDrawer() {
-  renderCartItems();
-  document.getElementById('cartDrawer').classList.add('open');
-  document.getElementById('cartOverlay').classList.add('open');
-}
-
-function checkoutWhatsApp() {
-  if (!cart.length) return;
-  if (cartContainsInactiveProduct()) {
-    window.alert('Remove unavailable (sold out) pieces from your bag to order via WhatsApp.');
-    return;
-  }
-  let msg = `Hello! I'd like to order from Bling Bling Baku:%0A%0A`;
-  cart.forEach(item => {
-    msg += `▪ ${item.name}`;
-    if (item.engraving) msg += ` (engraving: ${item.engraving})`;
-    if (item.colorLabel) msg += ` (chain: ${item.colorLabel})`;
-    if (item.diamond) msg += ` (diamond: ${item.diamond})`;
-    msg += ` × ${item.qty} = ${(item.price * item.qty).toFixed(2)} AZN%0A`;
-  });
-  const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
-  msg += `%0ATotal: ${total.toFixed(2)} AZN%0A%0APlease confirm availability. Thank you! 🌸`;
-  window.open(`https://wa.me/${WA_NUMBER}?text=${msg}`, '_blank');
-}
-
-function inquireProduct(id) {
-  const p = productCache.find(x => String(x.id) === String(id));
-  if (!p) return;
-  const msg = `Hello! I'm interested 
