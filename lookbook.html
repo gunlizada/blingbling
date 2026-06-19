@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lookbook — Bling Bling Baku</title>
+  <link rel="icon" type="image/png" href="assets/favicon.png" />
+  <link rel="stylesheet" href="css/style.css?v=14" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400;1,500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=Cinzel+Decorative:wght@400;700;900&family=Great+Vibes&family=Bebas+Neue&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-LKVVYJT74W"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-LKVVYJT74W');
+  </script>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="header" id="header">
+    <nav class="navbar">
+      <a href="index.html" class="logo">
+        <span class="logo-script">Bling</span>
+        <span class="logo-cinzel">BLING</span>
+        <span class="logo-script">Baku</span>
+      </a>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="shop/shop.html">Shop</a></li>
+        <li><a href="index.html#new-arrivals">New Arrivals</a></li>
+        <li><a href="index.html#lookbook" class="active">Lookbook</a></li>
+        <li><a href="index.html#about">About</a></li>
+        <li><a href="index.html#contact">Contact</a></li>
+      </ul>
+      <div class="nav-actions">
+        <button type="button" class="icon-btn cart-btn" aria-label="Shopping bag" onclick="toggleCart()">
+          <i class="fas fa-shopping-bag"></i>
+          <span class="cart-count" id="cartCount">0</span>
+        </button>
+        <button type="button" class="icon-btn menu-toggle" id="menuToggle" aria-label="Menu" onclick="toggleMenu()"><i class="fas fa-bars"></i></button>
+      </div>
+    </nav>
+  </header>
+
+  <!-- LOOKBOOK PAGE -->
+  <main class="lb-page" id="lookbookPage">
+    <div class="lb-page__loading" id="lbPageState">
+      <div class="lb-spinner"></div>
+    </div>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container footer-grid">
+      <div class="footer-brand">
+        <div class="logo">
+          <span class="logo-script">Bling</span>
+          <span class="logo-cinzel">BLING</span>
+          <span class="logo-script">Baku</span>
+        </div>
+        <p>Luxury accessories for every occasion. Delivered with care in Baku.</p>
+        <div class="social-links">
+          <a href="https://www.instagram.com/blingblingbaku/" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+          <a href="https://wa.me/994702003335" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+        </div>
+      </div>
+      <div class="footer-links">
+        <h4>Shop</h4>
+        <ul>
+          <li><a href="shop/shop.html">All products</a></li>
+          <li><a href="shop/shop.html?cat=claw-clips">Claw Clips</a></li>
+          <li><a href="shop/shop.html?cat=hairbrush">Hairbrush</a></li>
+          <li><a href="shop/shop.html?cat=vanity-case">Vanity Case</a></li>
+          <li><a href="shop/shop.html?cat=mirrors">Mirrors</a></li>
+        </ul>
+      </div>
+      <div class="footer-links">
+        <h4>Info</h4>
+        <ul>
+          <li><a href="index.html#about">About us</a></li>
+          <li><a href="index.html#contact">Contact</a></li>
+          <li><a href="index.html#contact">Shipping &amp; pickup</a></li>
+          <li><a href="index.html#contact">Returns</a></li>
+        </ul>
+      </div>
+      <div class="footer-contact">
+        <h4>Contact</h4>
+        <a href="https://wa.me/994702003335" target="_blank" rel="noopener noreferrer" class="footer-wa">
+          <i class="fab fa-whatsapp"></i> +994 70 200 33 35
+        </a>
+        <a href="https://www.instagram.com/blingblingbaku/" target="_blank" rel="noopener noreferrer">
+          <i class="fab fa-instagram"></i> @blingblingbaku
+        </a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 Bling Bling Baku. All rights reserved.</p>
+      <a href="admin/index.html" class="admin-link">Admin</a>
+    </div>
+  </footer>
+
+  <!-- CART DRAWER -->
+  <div class="cart-overlay" id="cartOverlay" onclick="toggleCart()"></div>
+  <div class="cart-drawer" id="cartDrawer">
+    <div class="cart-header">
+      <h3>Your bag</h3>
+      <button type="button" aria-label="Close bag" onclick="toggleCart()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="cart-items" id="cartItems"></div>
+    <div class="cart-footer">
+      <div class="cart-total">
+        <span>Total</span>
+        <span id="cartTotal">0 AZN</span>
+      </div>
+      <button type="button" id="cartCheckoutBtn" class="btn btn-primary full-width" onclick="checkoutWhatsApp()">
+        <i class="fab fa-whatsapp"></i> Order via WhatsApp
+      </button>
+    </div>
+  </div>
+
+  <!-- FLOATING WHATSAPP -->
+  <a href="https://wa.me/994702003335" target="_blank" rel="noopener noreferrer" class="float-wa" aria-label="Chat on WhatsApp">
+    <i class="fab fa-whatsapp"></i>
+  </a>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="js/config.js?v=14"></script>
+  <script src="js/products.js?v=14"></script>
+  <script src="js/main.js?v=14"></script>
+</body>
+</html>
