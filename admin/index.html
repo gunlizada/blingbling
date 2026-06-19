@@ -115,6 +115,19 @@
     .img-uploading{display:flex;align-items:center;justify-content:center;gap:8px;padding:10px;font-size:0.82rem;color:var(--pink-deep);}
     .spinner-sm{width:16px;height:16px;border:2px solid var(--pink-light);border-top-color:var(--pink-deep);border-radius:50%;animation:spin 0.8s linear infinite;}
 
+    /* Lookbooks admin grid */
+    .lb-admin-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:18px;}
+    .lb-admin-card{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:var(--white);display:flex;flex-direction:column;}
+    .lb-admin-cover{aspect-ratio:4/5;background:var(--pink-pale);display:flex;align-items:center;justify-content:center;color:var(--pink-light);font-size:1.6rem;overflow:hidden;}
+    .lb-admin-cover img{width:100%;height:100%;object-fit:cover;}
+    .lb-admin-body{padding:14px 16px;display:flex;flex-direction:column;gap:6px;}
+    .lb-admin-name{font-weight:500;color:var(--text-dark);font-size:0.95rem;}
+    .lb-admin-count{font-size:0.74rem;color:var(--text-light);text-transform:uppercase;letter-spacing:0.08em;}
+    .lb-admin-count.soon{color:var(--pink-deep);}
+    .lb-admin-actions{display:flex;gap:6px;margin-top:6px;}
+    .lb-empty{grid-column:1/-1;text-align:center;padding:50px 20px;color:var(--text-light);font-size:0.9rem;}
+    .lb-cover-single{width:120px;height:150px;}
+
     /* Colors */
     .color-manager{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
     .color-chip{width:32px;height:32px;border-radius:50%;border:3px solid white;box-shadow:0 0 0 1.5px var(--border);cursor:pointer;position:relative;display:flex;align-items:center;justify-content:center;}
@@ -161,6 +174,7 @@
     <nav class="admin-nav">
       <button class="active" onclick="showPage('dashboard',this)"><i class="fas fa-chart-bar"></i> Dashboard</button>
       <button onclick="showPage('products',this)"><i class="fas fa-gem"></i> Products</button>
+      <button onclick="showPage('lookbooks',this)"><i class="fas fa-images"></i> Lookbooks</button>
     </nav>
     <div class="admin-header-right">
       <a href="../index.html" target="_blank" class="header-store-link"><i class="fas fa-external-link-alt"></i> View Store</a>
@@ -213,6 +227,19 @@
               </td></tr>
             </tbody>
           </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOOKBOOKS -->
+    <div class="admin-page" id="page-lookbooks">
+      <div class="page-header">
+        <h2>Lookbooks</h2>
+        <button class="btn-add" onclick="openLookbookForm()"><i class="fas fa-plus"></i> Add Lookbook</button>
+      </div>
+      <div class="admin-card" style="padding:24px">
+        <div class="lb-admin-grid" id="lookbookAdminGrid">
+          <p style="color:var(--text-light);font-size:0.88rem">Loading…</p>
         </div>
       </div>
     </div>
@@ -285,11 +312,52 @@
   </div>
 </div>
 
+<!-- LOOKBOOK FORM MODAL -->
+<div class="form-overlay" id="lookbookFormOverlay">
+  <div class="product-form">
+    <h2 class="form-title" id="lookbookFormTitle">Add New Lookbook</h2>
+    <div class="form-grid">
+      <div class="form-group full">
+        <label>Lookbook Name / Description *</label>
+        <input type="text" class="form-input" id="lbTitle" placeholder="e.g. Spring Editorial 2026" />
+      </div>
+
+      <div class="form-group full">
+        <label>Cover Photo (shown on the site) *</label>
+        <div class="img-upload-area" onclick="document.getElementById('lbCoverInput').click()">
+          <i class="fas fa-image"></i>
+          <p>Click to upload a cover photo</p>
+          <p style="font-size:0.75rem;margin-top:6px">One image • JPG, PNG, WEBP</p>
+          <input type="file" id="lbCoverInput" accept="image/*" onchange="handleLbCoverUpload(this)" />
+        </div>
+        <div id="lbCoverProgress"></div>
+        <div class="img-previews" id="lbCoverPreview"></div>
+      </div>
+
+      <div class="form-group full">
+        <label>Gallery Photos (optional — leave empty for a cover-only lookbook)</label>
+        <div class="img-upload-area" onclick="document.getElementById('lbPhotosInput').click()">
+          <i class="fas fa-cloud-upload-alt"></i>
+          <p>Click to upload gallery photos</p>
+          <p style="font-size:0.75rem;margin-top:6px">Multiple allowed • 0 photos = lookbook shows only the cover and is not clickable</p>
+          <input type="file" id="lbPhotosInput" accept="image/*" multiple onchange="handleLbPhotosUpload(this)" />
+        </div>
+        <div id="lbPhotosProgress"></div>
+        <div class="img-previews" id="lbPhotosPreview"></div>
+      </div>
+    </div>
+    <div class="form-footer">
+      <button class="btn-cancel" onclick="closeLookbookForm()">Cancel</button>
+      <button class="btn-save" id="btnLbSave" onclick="saveLookbook()"><i class="fas fa-check"></i> Save Lookbook</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <!-- Supabase JS -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="../js/config.js?v=12"></script>
+<script src="../js/config.js?v=13"></script>
 <script>
 // ============================================================
 //  ADMIN LOGIC — Supabase powered
@@ -300,6 +368,12 @@ let filtered   = [];    // after search/filter
 let editingId  = null;
 let formImages = [];    // URLs already uploaded
 let formColors = [];
+
+// Lookbook state
+let allLookbooks       = [];
+let editingLookbookId  = null;
+let lbCover            = null;   // cover URL (single)
+let lbPhotos          = [];     // gallery URLs
 
 // ---- HTML ESCAPE (prevents XSS when rendering DB text into the admin DOM) ----
 function escapeHtml(str) {
@@ -427,6 +501,7 @@ function showPage(page, btn) {
   btn.classList.add('active');
   if (page === 'dashboard') loadDashboard();
   if (page === 'products') loadProductsPage();
+  if (page === 'lookbooks') loadLookbooksPage();
 }
 
 // ---- DASHBOARD ----
@@ -675,6 +750,175 @@ function renderColorChips() {
     '<button class="add-color-btn" onclick="addColorPicker()"><i class="fas fa-plus"></i> Add Color</button>';
 }
 function removeColor(i) { formColors.splice(i, 1); renderColorChips(); }
+
+// ============================================================
+//  LOOKBOOKS
+// ============================================================
+async function loadLookbooksPage() {
+  const grid = document.getElementById('lookbookAdminGrid');
+  grid.innerHTML = '<p style="color:var(--text-light);font-size:0.88rem">Loading…</p>';
+  const { data, error } = await supabase
+    .from('lookbooks').select('*').order('created_at', { ascending: false });
+  if (error) { showToast('Failed to load lookbooks: ' + error.message, 'error'); return; }
+  allLookbooks = data || [];
+  renderLookbookAdmin();
+}
+
+function renderLookbookAdmin() {
+  const grid = document.getElementById('lookbookAdminGrid');
+  if (!allLookbooks.length) {
+    grid.innerHTML = '<div class="lb-empty">No lookbooks yet. Click “Add Lookbook” to create your first one ✦</div>';
+    return;
+  }
+  grid.innerHTML = allLookbooks.map(l => {
+    const photos = Array.isArray(l.photos) ? l.photos : [];
+    const cover = l.cover
+      ? `<img src="${escapeHtml(l.cover)}" alt="" loading="lazy" />`
+      : `<i class="fas fa-image"></i>`;
+    const countHtml = photos.length
+      ? `<span class="lb-admin-count">${photos.length} photo${photos.length>1?'s':''} • gallery</span>`
+      : `<span class="lb-admin-count soon">Cover only • not clickable</span>`;
+    return `
+      <div class="lb-admin-card">
+        <div class="lb-admin-cover">${cover}</div>
+        <div class="lb-admin-body">
+          <span class="lb-admin-name">${escapeHtml(l.title)}</span>
+          ${countHtml}
+          <div class="lb-admin-actions">
+            <button class="btn-edit" onclick="openLookbookForm('${l.id}')" title="Edit"><i class="fas fa-pencil-alt"></i></button>
+            <button class="btn-del" onclick="deleteLookbook('${l.id}')" title="Delete"><i class="fas fa-trash-alt"></i></button>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+async function openLookbookForm(id) {
+  editingLookbookId = id || null;
+  lbCover = null;
+  lbPhotos = [];
+  document.getElementById('lbCoverProgress').innerHTML = '';
+  document.getElementById('lbPhotosProgress').innerHTML = '';
+  document.getElementById('btnLbSave').disabled = false;
+
+  if (editingLookbookId) {
+    document.getElementById('lookbookFormTitle').textContent = 'Edit Lookbook';
+    let l = allLookbooks.find(x => String(x.id) === String(editingLookbookId));
+    if (!l) {
+      const { data } = await supabase.from('lookbooks').select('*').eq('id', editingLookbookId).single();
+      l = data;
+    }
+    if (!l) { showToast('Lookbook not found', 'error'); return; }
+    document.getElementById('lbTitle').value = l.title || '';
+    lbCover  = l.cover || null;
+    lbPhotos = Array.isArray(l.photos) ? [...l.photos] : [];
+  } else {
+    document.getElementById('lookbookFormTitle').textContent = 'Add New Lookbook';
+    document.getElementById('lbTitle').value = '';
+  }
+  renderLbCoverPreview();
+  renderLbPhotosPreview();
+  document.getElementById('lookbookFormOverlay').classList.add('open');
+}
+
+function closeLookbookForm() {
+  document.getElementById('lookbookFormOverlay').classList.remove('open');
+  editingLookbookId = null;
+}
+
+// Cover upload (single — replaces any existing cover)
+async function handleLbCoverUpload(input) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+  const progressEl = document.getElementById('lbCoverProgress');
+  progressEl.innerHTML = '<div class="img-uploading"><div class="spinner-sm"></div> Uploading cover…</div>';
+  const url = await uploadLbFile(file);
+  progressEl.innerHTML = '';
+  input.value = '';
+  if (!url) { showToast('Cover upload failed', 'error'); return; }
+  lbCover = url;
+  renderLbCoverPreview();
+}
+
+// Gallery upload (multiple)
+async function handleLbPhotosUpload(input) {
+  const files = Array.from(input.files);
+  if (!files.length) return;
+  const progressEl = document.getElementById('lbPhotosProgress');
+  progressEl.innerHTML = `<div class="img-uploading"><div class="spinner-sm"></div> Uploading ${files.length} photo${files.length>1?'s':''}…</div>`;
+  for (const file of files) {
+    const url = await uploadLbFile(file);
+    if (url) { lbPhotos.push(url); renderLbPhotosPreview(); }
+  }
+  progressEl.innerHTML = '';
+  input.value = '';
+}
+
+// Shared upload helper → returns public URL (reuses product-images bucket)
+async function uploadLbFile(file) {
+  const ext = file.name.split('.').pop().toLowerCase();
+  const fileName = `lookbook_${Date.now()}_${Math.random().toString(36).substr(2,6)}.${ext}`;
+  const { error } = await supabase.storage
+    .from('product-images')
+    .upload(fileName, file, { cacheControl: '3600', upsert: false });
+  if (error) { showToast('Upload failed: ' + error.message, 'error'); return null; }
+  const { data } = supabase.storage.from('product-images').getPublicUrl(fileName);
+  return data.publicUrl;
+}
+
+function renderLbCoverPreview() {
+  const el = document.getElementById('lbCoverPreview');
+  el.innerHTML = lbCover
+    ? `<div class="img-preview lb-cover-single"><img src="${escapeHtml(lbCover)}" alt="" /><button class="remove-img" onclick="removeLbCover()"><i class="fas fa-times"></i></button></div>`
+    : '';
+}
+function removeLbCover() { lbCover = null; renderLbCoverPreview(); }
+
+function renderLbPhotosPreview() {
+  document.getElementById('lbPhotosPreview').innerHTML = lbPhotos.map((src, i) => `
+    <div class="img-preview">
+      <img src="${escapeHtml(src)}" alt="" />
+      <button class="remove-img" onclick="removeLbPhoto(${i})"><i class="fas fa-times"></i></button>
+    </div>`).join('');
+}
+function removeLbPhoto(i) { lbPhotos.splice(i, 1); renderLbPhotosPreview(); }
+
+async function saveLookbook() {
+  const title = document.getElementById('lbTitle').value.trim();
+  if (!title)   { showToast('Please enter a lookbook name', 'error'); return; }
+  if (!lbCover) { showToast('Please upload a cover photo', 'error'); return; }
+
+  const btn = document.getElementById('btnLbSave');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner-sm"></div> Saving…';
+
+  const payload = { title, cover: lbCover, photos: lbPhotos, active: true };
+
+  let result;
+  if (editingLookbookId) {
+    result = await supabase.from('lookbooks').update(payload).eq('id', editingLookbookId).select().single();
+  } else {
+    result = await supabase.from('lookbooks').insert([payload]).select().single();
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '<i class="fas fa-check"></i> Save Lookbook';
+
+  if (result.error) { showToast('Save failed: ' + result.error.message, 'error'); return; }
+
+  closeLookbookForm();
+  await loadLookbooksPage();
+  showToast(editingLookbookId ? 'Lookbook updated ✦' : 'Lookbook added ✦', 'success');
+}
+
+async function deleteLookbook(id) {
+  if (!confirm('Delete this lookbook permanently?')) return;
+  const { error } = await supabase.from('lookbooks').delete().eq('id', id);
+  if (error) { showToast('Delete failed: ' + error.message, 'error'); return; }
+  allLookbooks = allLookbooks.filter(l => String(l.id) !== String(id));
+  renderLookbookAdmin();
+  showToast('Lookbook deleted', 'success');
+}
 
 // ---- TOAST ----
 function showToast(msg, type = '') {
