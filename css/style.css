@@ -414,22 +414,142 @@
   /* ============================================================
      HERO
      ============================================================ */
-  /* Hero is a single pre-composed banner image, clickable through to the shop. */
+  /* Hero: text-free model photo background + real HTML headline & button. */
   .hero {
     position: relative;
+    min-height: min(82vh, 760px);
+    display: flex;
+    align-items: center;
     overflow: hidden;
     background: var(--pink-whisper);
   }
 
-  .hero__banner {
-    display: block;
-    width: 100%;
+  .hero__bg {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+      linear-gradient(90deg,
+        rgba(247, 239, 240, 0.97) 0%,
+        rgba(247, 239, 240, 0.80) 26%,
+        rgba(247, 239, 240, 0.32) 46%,
+        rgba(247, 239, 240, 0) 62%),
+      url('../assets/hero.png');
+    background-size: cover, cover;
+    background-position: left center, right center;
+    background-repeat: no-repeat, no-repeat;
   }
 
-  .hero__banner img {
-    display: block;
+  .hero__inner {
+    position: relative;
+    z-index: 2;
     width: 100%;
-    height: auto;
+    padding-inline: clamp(1.5rem, 6vw, 6rem);
+    padding-block: clamp(3rem, 10vh, 5rem);
+  }
+
+  .hero__copy { max-width: 46rem; }
+
+  .hero__title {
+    font-family: 'Bebas Neue', var(--font-display), sans-serif;
+    font-weight: 400;
+    font-size: clamp(2.2rem, 4.6vw, 3.8rem);
+    line-height: 1.08;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: #8a6470;
+    margin-bottom: 2rem;
+  }
+
+  .hero__line { display: block; }
+
+  /* Elegant script accent for the word "Signature". */
+  .hero__script {
+    font-family: 'Great Vibes', cursive;
+    font-style: normal;
+    text-transform: none;
+    font-size: 1.35em;
+    line-height: 0.8;
+    color: #7a5238;
+    letter-spacing: 0;
+    margin: 0 0.08em;
+  }
+
+  /* Decorative four-point sparkles (clean star glyph). */
+  .hero__spark {
+    position: absolute;
+    z-index: 2;
+    font-size: var(--s, 42px);
+    line-height: 1;
+    color: rgba(190, 150, 162, 0.55);
+    pointer-events: none;
+    opacity: 0.2;
+    animation: heroSparkle 3.6s ease-in-out infinite;
+  }
+
+  .hero__spark::before { content: '✦'; }
+
+  .hero__spark--1 { left: 3.5%;  top: 22%;  --s: 38px; animation-delay: 0s; }
+  .hero__spark--2 { left: 2.2%;  top: 56%;  --s: 24px; animation-delay: 1.2s; }
+  .hero__spark--3 { left: 55%;   top: 38%;  --s: 46px; animation-delay: 0.6s; }
+
+  @keyframes heroSparkle {
+    0%, 100% { opacity: 0.15; transform: scale(0.7) rotate(0deg); }
+    50%      { opacity: 0.85; transform: scale(1) rotate(90deg); }
+  }
+
+  /* Animated CTA button. */
+  .hero__cta {
+    position: relative;
+    display: inline-block;
+    font-family: 'Bebas Neue', var(--font-body), sans-serif;
+    font-size: 1.15rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #fff;
+    background: #a86b78;
+    padding: 0.95rem 2.4rem;
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 0 8px 22px rgba(168, 107, 120, 0.32);
+    transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+    animation: heroCtaPulse 2.8s ease-in-out infinite;
+  }
+
+  .hero__cta:hover {
+    background: #95586a;
+    transform: translateY(-3px);
+    box-shadow: 0 14px 30px rgba(149, 88, 106, 0.45);
+    animation-play-state: paused;
+  }
+
+  /* Sliding shine sweep across the button. */
+  .hero__cta::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -120%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(120deg, transparent 0%, rgba(255, 255, 255, 0.45) 50%, transparent 100%);
+    transform: skewX(-20deg);
+    animation: heroCtaShine 2.8s ease-in-out infinite;
+  }
+
+  @keyframes heroCtaPulse {
+    0%, 100% { box-shadow: 0 8px 22px rgba(168, 107, 120, 0.32); }
+    50%      { box-shadow: 0 8px 28px rgba(168, 107, 120, 0.55); }
+  }
+
+  @keyframes heroCtaShine {
+    0%   { left: -120%; }
+    55%  { left: 130%; }
+    100% { left: 130%; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero__spark, .hero__cta, .hero__cta::after { animation: none; }
+    .hero__spark { opacity: 0.5; }
   }
 
   /* PAGE HERO SMALL */
