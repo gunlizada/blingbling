@@ -1536,6 +1536,52 @@
     pointer-events: all;
     transform: translate(-50%, -50%);
   }
+
+  .founder-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -58%);
+    width: 460px;
+    max-width: 92vw;
+    background: var(--white);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-lg);
+    padding: 2.75rem 2.25rem 2.5rem;
+    z-index: 1700;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s var(--ease-out), transform 0.4s var(--ease-out);
+  }
+
+  .founder-modal.open {
+    opacity: 1;
+    pointer-events: all;
+    transform: translate(-50%, -50%);
+  }
+
+  .founder-eyebrow {
+    display: block;
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--text-light);
+    margin-bottom: 0.6rem;
+  }
+
+  .founder-modal h3 {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    color: var(--text-dark);
+    margin-bottom: 0.85rem;
+  }
+
+  .founder-modal p {
+    font-size: 0.98rem;
+    line-height: 1.7;
+    color: var(--text-mid);
+  }
   
   .modal-close {
     position: absolute;
