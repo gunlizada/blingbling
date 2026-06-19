@@ -277,11 +277,11 @@
   }
 
   .logo-cinzel {
-    font-family: 'Cinzel Decorative', var(--font-display), serif;
-    font-size: 1.15rem;
-    font-weight: 700;
+    font-family: 'Bebas Neue', var(--font-display), sans-serif;
+    font-size: 1.5rem;
+    font-weight: 400;
     color: var(--text-dark);
-    letter-spacing: 0.08em;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
   }
   
