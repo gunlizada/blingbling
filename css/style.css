@@ -448,13 +448,13 @@
     padding-block: clamp(3rem, 10vh, 5rem);
   }
 
-  .hero__copy { max-width: 46rem; }
+  .hero__copy { max-width: 52rem; }
 
   .hero__title {
     font-family: 'Bebas Neue', var(--font-display), sans-serif;
     font-weight: 400;
-    font-size: clamp(2.2rem, 4.6vw, 3.8rem);
-    line-height: 1.08;
+    font-size: clamp(2.7rem, 5.6vw, 4.8rem);
+    line-height: 1.06;
     letter-spacing: 0.02em;
     text-transform: uppercase;
     color: #8a6470;
@@ -523,32 +523,13 @@
     animation-play-state: paused;
   }
 
-  /* Sliding shine sweep across the button. */
-  .hero__cta::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -120%;
-    width: 60%;
-    height: 100%;
-    background: linear-gradient(120deg, transparent 0%, rgba(255, 255, 255, 0.45) 50%, transparent 100%);
-    transform: skewX(-20deg);
-    animation: heroCtaShine 2.8s ease-in-out infinite;
-  }
-
   @keyframes heroCtaPulse {
     0%, 100% { box-shadow: 0 8px 22px rgba(168, 107, 120, 0.32); }
     50%      { box-shadow: 0 8px 28px rgba(168, 107, 120, 0.55); }
   }
 
-  @keyframes heroCtaShine {
-    0%   { left: -120%; }
-    55%  { left: 130%; }
-    100% { left: 130%; }
-  }
-
   @media (prefers-reduced-motion: reduce) {
-    .hero__spark, .hero__cta, .hero__cta::after { animation: none; }
+    .hero__spark, .hero__cta { animation: none; }
     .hero__spark { opacity: 0.5; }
   }
 
