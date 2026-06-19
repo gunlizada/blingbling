@@ -77,40 +77,6 @@ async function uploadProductImage(file) {
   return data.publicUrl;
 }
 
-// ============================================================
-//  LOOKBOOKS (Supabase)
-// ============================================================
-
-// ---- FETCH LOOKBOOKS (storefront + admin) ----
-async function getLookbooks() {
-  const { data, error } = await supabase
-    .from('lookbooks')
-    .select('*')
-    .order('created_at', { ascending: false });
-  if (error) { console.error('getLookbooks error:', error); return []; }
-  return data || [];
-}
-
-// ---- FETCH SINGLE LOOKBOOK ----
-async function getLookbook(id) {
-  const { data, error } = await supabase
-    .from('lookbooks').select('*').eq('id', id).single();
-  if (error) { console.error('getLookbook error:', error); return null; }
-  return data;
-}
-
-// ---- UPLOAD LOOKBOOK IMAGE (reuses the product-images bucket) ----
-async function uploadLookbookImage(file) {
-  const ext = file.name.split('.').pop().toLowerCase();
-  const fileName = `lookbook_${Date.now()}_${Math.random().toString(36).substr(2,6)}.${ext}`;
-  const { error } = await supabase.storage
-    .from('product-images')
-    .upload(fileName, file, { cacheControl: '3600', upsert: false });
-  if (error) { console.error('Lookbook upload error:', error); return null; }
-  const { data } = supabase.storage.from('product-images').getPublicUrl(fileName);
-  return data.publicUrl;
-}
-
 // ---- CATEGORIES ----
 // Parent categories with optional subcategories. A product's `category` field
 // stores a LEAF key (e.g. 'mini-claw-clips'), or the parent key when the parent
