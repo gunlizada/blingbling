@@ -272,7 +272,7 @@
     font-family: 'Blosta', 'Great Vibes', cursive;
     font-size: 2rem;
     font-weight: 400;
-    color: var(--text-dark);
+    color: var(--text-light);
     line-height: 1;
   }
 
@@ -280,7 +280,7 @@
     font-family: 'Bebas Neue', var(--font-display), sans-serif;
     font-size: 1.5rem;
     font-weight: 400;
-    color: var(--text-dark);
+    color: var(--text-light);
     letter-spacing: 0.1em;
     text-transform: uppercase;
   }
@@ -1911,7 +1911,7 @@
     gap: clamp(2rem, 4vw, 3rem);
   }
   
-  .footer .logo-script { color: var(--text-dark); }
+  .footer .logo-script { color: var(--text-light); }
 
   .footer .logo-cinzel { color: var(--text-light); }
   
