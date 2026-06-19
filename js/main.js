@@ -43,8 +43,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderCategories();
   initScrollReveal(); // init observer early — section elements exist at this point
   await loadAndRenderHome();
-  loadAndRenderLookbooks();
-  renderLookbookPage();
   syncCartCheckoutWhatsAppButton();
 });
 
@@ -97,120 +95,6 @@ function loadingHTML() {
         <div style="height:14px;background:var(--pink-pale);border-radius:6px;width:40%"></div>
       </div>
     </div>`).join('');
-}
-
-// ============================================================
-//  LOOKBOOKS
-// ============================================================
-let lookbookCache = [];
-
-async function loadAndRenderLookbooks() {
-  const section = document.getElementById('lookbook');
-  const grid = document.getElementById('lookbookGrid');
-  if (!grid || !section) return;
-
-  lookbookCache = await getLookbooks();
-  const visible = lookbookCache.filter(l => l.active !== false);
-
-  // No lookbooks at all → hide the whole section so the page stays clean.
-  if (!visible.length) { section.style.display = 'none'; return; }
-  section.style.display = '';
-
-  grid.innerHTML = visible.map(l => lookbookCard(l)).join('');
-  requestAnimationFrame(() => revealGridItems('#lookbookGrid .lookbook-card'));
-}
-
-function lookbookCard(l) {
-  const photos = Array.isArray(l.photos) ? l.photos : [];
-  const hasGallery = photos.length > 0;
-  const id    = escapeHtml(l.id);
-  const title = escapeHtml(l.title || '');
-  const cover = l.cover
-    ? `<img src="${escapeHtml(l.cover)}" alt="${title}" loading="lazy" />`
-    : `<div class="no-img"><i class="fas fa-camera-retro"></i></div>`;
-
-  if (hasGallery) {
-    return `
-    <a class="lookbook-card is-clickable" href="lookbook.html?id=${encodeURIComponent(id)}">
-      <div class="lookbook-cover">${cover}
-        <div class="lookbook-cover__overlay">
-          <span class="lookbook-cover__view"><i class="fas fa-images"></i> View lookbook</span>
-        </div>
-      </div>
-      <div class="lookbook-meta">
-        <h3 class="lookbook-title">${title}</h3>
-        <span class="lookbook-count">${photos.length} photo${photos.length > 1 ? 's' : ''}</span>
-      </div>
-    </a>`;
-  }
-
-  // No photos → cover-only, NOT clickable.
-  return `
-    <article class="lookbook-card is-static" aria-disabled="true">
-      <div class="lookbook-cover">${cover}</div>
-      <div class="lookbook-meta">
-        <h3 class="lookbook-title">${title}</h3>
-        <span class="lookbook-count lookbook-count--soon">Coming soon</span>
-      </div>
-    </article>`;
-}
-
-// ---- Dedicated lookbook page (lookbook.html?id=…) ----
-async function renderLookbookPage() {
-  const root = document.getElementById('lookbookPage');
-  if (!root) return; // only runs on lookbook.html
-
-  const params = new URLSearchParams(window.location.search);
-  const id = params.get('id');
-
-  const stateEl = document.getElementById('lbPageState');
-  const notFound = (msg) => {
-    root.innerHTML = `
-      <div class="lb-page__empty">
-        <i class="fas fa-camera-retro"></i>
-        <h1>${escapeHtml(msg)}</h1>
-        <a href="index.html#lookbook" class="btn btn-primary">Back to lookbooks</a>
-      </div>`;
-  };
-
-  if (!id) { notFound('Lookbook not found'); return; }
-
-  const l = await getLookbook(id);
-  if (!l) { notFound('This lookbook is no longer available'); return; }
-
-  const photos = Array.isArray(l.photos) ? l.photos : [];
-  const title = l.title || 'Lookbook';
-  document.title = `${title} — Bling Bling Baku`;
-
-  const gallery = photos.length
-    ? `<div class="lb-page__gallery">${photos.map((src, i) => `
-        <figure class="lb-page__shot">
-          <img src="${escapeHtml(src)}" alt="${escapeHtml(title)} — photo ${i + 1}" loading="lazy" />
-        </figure>`).join('')}</div>`
-    : `<div class="lb-page__gallery-empty"><p>Photos coming soon.</p></div>`;
-
-  root.innerHTML = `
-    <header class="lb-page__hero">
-      <a href="index.html#lookbook" class="lb-page__back"><i class="fas fa-arrow-left"></i> All lookbooks</a>
-      <span class="section-eyebrow">Lookbook</span>
-      <h1 class="lb-page__title">${escapeHtml(title)}</h1>
-      ${photos.length ? `<span class="lb-page__count">${photos.length} photo${photos.length > 1 ? 's' : ''}</span>` : ''}
-    </header>
-    ${gallery}
-    <div class="lb-page__footer-cta">
-      <a href="index.html#lookbook" class="btn btn-outline">Back to all lookbooks</a>
-    </div>`;
-  void stateEl;
-}
-
-// Kept as a no-op-safe closer (Escape handler / legacy callers).
-function closeLookbook() {
-  const overlay = document.getElementById('lookbookOverlay');
-  const modal = document.getElementById('lookbookModal');
-  if (!overlay || !modal) return;
-  overlay.classList.remove('open');
-  modal.classList.remove('open');
-  document.body.style.overflow = '';
 }
 
 function colorLabel(hex, fallback = 'Custom tone') {
@@ -436,7 +320,7 @@ function closeFounderModal() {
 }
 
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') { closeFounderModal(); closeLookbook(); }
+  if (e.key === 'Escape') closeFounderModal();
 });
 
 function switchModalImg(i, thumb, images) {
