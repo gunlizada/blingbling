@@ -226,6 +226,7 @@
           <li><a href="index.html#contact">Contact</a></li>
           <li><a href="index.html#contact">Shipping &amp; pickup</a></li>
           <li><a href="index.html#contact">Returns</a></li>
+          <li><a href="#" onclick="openFounderModal(); return false;">Who is behind BlingBlingBaku</a></li>
         </ul>
       </div>
       <div class="footer-contact">
@@ -268,6 +269,15 @@
   <div class="product-modal" id="productModal">
     <button type="button" class="modal-close" aria-label="Close" onclick="closeModal()"><i class="fas fa-times"></i></button>
     <div class="modal-body" id="modalBody"></div>
+  </div>
+
+  <!-- FOUNDER MODAL -->
+  <div class="modal-overlay" id="founderOverlay" onclick="closeFounderModal()"></div>
+  <div class="founder-modal" id="founderModal" role="dialog" aria-modal="true" aria-labelledby="founderTitle">
+    <button type="button" class="modal-close" aria-label="Close" onclick="closeFounderModal()"><i class="fas fa-times"></i></button>
+    <span class="founder-eyebrow">Our story</span>
+    <h3 id="founderTitle">Who is behind BlingBlingBaku</h3>
+    <p>Emiliya founded BlingBlingBaku with a love for the little details that make something feel personal.</p>
   </div>
 
   <!-- FLOATING WHATSAPP -->
