@@ -43,6 +43,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderCategories();
   initScrollReveal(); // init observer early — section elements exist at this point
   await loadAndRenderHome();
+  loadAndRenderLookbooks();
   syncCartCheckoutWhatsAppButton();
 });
 
@@ -95,6 +96,92 @@ function loadingHTML() {
         <div style="height:14px;background:var(--pink-pale);border-radius:6px;width:40%"></div>
       </div>
     </div>`).join('');
+}
+
+// ============================================================
+//  LOOKBOOKS
+// ============================================================
+let lookbookCache = [];
+
+async function loadAndRenderLookbooks() {
+  const section = document.getElementById('lookbook');
+  const grid = document.getElementById('lookbookGrid');
+  if (!grid || !section) return;
+
+  lookbookCache = await getLookbooks();
+  const visible = lookbookCache.filter(l => l.active !== false);
+
+  // No lookbooks at all → hide the whole section so the page stays clean.
+  if (!visible.length) { section.style.display = 'none'; return; }
+  section.style.display = '';
+
+  grid.innerHTML = visible.map(l => lookbookCard(l)).join('');
+  requestAnimationFrame(() => revealGridItems('#lookbookGrid .lookbook-card'));
+}
+
+function lookbookCard(l) {
+  const photos = Array.isArray(l.photos) ? l.photos : [];
+  const hasGallery = photos.length > 0;
+  const id    = escapeHtml(l.id);
+  const title = escapeHtml(l.title || '');
+  const cover = l.cover
+    ? `<img src="${escapeHtml(l.cover)}" alt="${title}" loading="lazy" />`
+    : `<div class="no-img"><i class="fas fa-camera-retro"></i></div>`;
+
+  if (hasGallery) {
+    return `
+    <article class="lookbook-card is-clickable" role="button" tabindex="0"
+             onclick="openLookbook('${id}')"
+             onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openLookbook('${id}');}">
+      <div class="lookbook-cover">${cover}
+        <div class="lookbook-cover__overlay">
+          <span class="lookbook-cover__view"><i class="fas fa-images"></i> View lookbook</span>
+        </div>
+      </div>
+      <div class="lookbook-meta">
+        <h3 class="lookbook-title">${title}</h3>
+        <span class="lookbook-count">${photos.length} photo${photos.length > 1 ? 's' : ''}</span>
+      </div>
+    </article>`;
+  }
+
+  // No photos → cover-only, NOT clickable.
+  return `
+    <article class="lookbook-card is-static" aria-disabled="true">
+      <div class="lookbook-cover">${cover}</div>
+      <div class="lookbook-meta">
+        <h3 class="lookbook-title">${title}</h3>
+        <span class="lookbook-count lookbook-count--soon">Coming soon</span>
+      </div>
+    </article>`;
+}
+
+function openLookbook(id) {
+  const l = lookbookCache.find(x => String(x.id) === String(id));
+  if (!l) return;
+  const photos = Array.isArray(l.photos) ? l.photos : [];
+  if (!photos.length) return; // safety: cover-only lookbooks aren't openable
+
+  document.getElementById('lookbookModalTitle').textContent = l.title || 'Lookbook';
+  document.getElementById('lookbookModalCount').textContent =
+    `${photos.length} photo${photos.length > 1 ? 's' : ''}`;
+  document.getElementById('lookbookModalGrid').innerHTML = photos.map((src, i) => `
+    <figure class="lb-photo">
+      <img src="${escapeHtml(src)}" alt="${escapeHtml(l.title || 'Lookbook')} — photo ${i + 1}" loading="lazy" />
+    </figure>`).join('');
+
+  document.getElementById('lookbookOverlay').classList.add('open');
+  document.getElementById('lookbookModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeLookbook() {
+  const overlay = document.getElementById('lookbookOverlay');
+  const modal = document.getElementById('lookbookModal');
+  if (!overlay || !modal) return;
+  overlay.classList.remove('open');
+  modal.classList.remove('open');
+  document.body.style.overflow = '';
 }
 
 function colorLabel(hex, fallback = 'Custom tone') {
@@ -320,7 +407,7 @@ function closeFounderModal() {
 }
 
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') closeFounderModal();
+  if (e.key === 'Escape') { closeFounderModal(); closeLookbook(); }
 });
 
 function switchModalImg(i, thumb, images) {
@@ -531,91 +618,4 @@ function checkoutWhatsApp() {
 function inquireProduct(id) {
   const p = productCache.find(x => String(x.id) === String(id));
   if (!p) return;
-  const msg = `Hello! I'm interested in: *${p.name}* — ${p.price} AZN. Is it available? 🌸`;
-  window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
-}
-
-function inquireProductFromModal() {
-  const modal = document.getElementById('productModal');
-  const p = modal.dataset.product ? JSON.parse(modal.dataset.product) : null;
-  if (!p) return;
-  const personalization = getSelectedModalPersonalization();
-  let msg = `Hello! I want to order this item:%0A*${p.name}* — ${p.price} AZN`;
-  if (personalization.engraving) msg += `%0AName/engraving: ${personalization.engraving}`;
-  if (personalization.colorLabel) msg += `%0AChain color: ${personalization.colorLabel}`;
-  if (personalization.diamond) msg += `%0ADiamond color: ${personalization.diamond}`;
-  msg += `%0A%0AIs this personalized version available? 🌸`;
-  window.open(`https://wa.me/${WA_NUMBER}?text=${msg}`, '_blank');
-}
-
-// ============================================================
-//  CONTACT FORM
-// ============================================================
-function submitInquiry(e) {
-  e.preventDefault();
-  const form = e.target;
-  const name = form.querySelector('[name="name"]')?.value?.trim() || '';
-  const phone = form.querySelector('[name="phone"]')?.value?.trim() || '';
-  const msg = form.querySelector('[name="message"]')?.value?.trim() || '';
-  const text = `Hello Bling Bling Baku,\n\nName: ${name}\nPhone: ${phone}\n\n${msg}`;
-  window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(text)}`, '_blank');
-}
-
-// ============================================================
-//  UI HELPERS
-// ============================================================
-function toggleMenu() { document.getElementById('navLinks')?.classList.toggle('open'); }
-
-// ============================================================
-//  SCROLL REVEAL — proper implementation
-// ============================================================
-let _scrollObserver = null;
-
-function initScrollReveal() {
-  // Section-level elements (not dynamically rendered)
-  const sectionTargets = document.querySelectorAll(
-    '.section-header, .promo-banner, .about-grid, .contact-grid, .footer-grid, .insta-strip, .page-hero.small'
-  );
-
-  _scrollObserver = new IntersectionObserver(
-    entries => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('revealed');
-          _scrollObserver.unobserve(entry.target);
-        }
-      });
-    },
-    { threshold: 0.05, rootMargin: '0px 0px -30px 0px' }
-  );
-
-  sectionTargets.forEach(el => {
-    if (el.classList.contains('section-header')) el.classList.add('reveal-header');
-    el.classList.add('reveal-on-scroll');
-    _scrollObserver.observe(el);
-  });
-}
-
-// Called after dynamic content (product cards, cat cards) is rendered
-function revealGridItems(containerSelector) {
-  if (!_scrollObserver) return;
-  const items = document.querySelectorAll(containerSelector);
-  items.forEach((el, i) => {
-    if (el.classList.contains('reveal-on-scroll')) return; // already observed
-    el.classList.add('reveal-on-scroll');
-    // Stagger: cycle through delay classes 1-6
-    const delayClass = `reveal-delay-${(i % 6) + 1}`;
-    el.classList.add(delayClass);
-    _scrollObserver.observe(el);
-  });
-}
-
-window.addEventListener('scroll', () => {
-  const h = document.getElementById('header');
-  if (h) h.style.boxShadow = window.scrollY > 40 ? '0 2px 20px rgba(0,0,0,0.08)' : '';
-});
-
-// Spinner CSS
-const spinStyle = document.createElement('style');
-spinStyle.textContent = '@keyframes spin { to { transform: rotate(360deg); } }';
-document.head.appendChild(spinStyle);
+  const msg = `Hello! I'm interested 
