@@ -44,6 +44,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   initScrollReveal(); // init observer early — section elements exist at this point
   await loadAndRenderHome();
   loadAndRenderLookbooks();
+  renderLookbookPage();
   syncCartCheckoutWhatsAppButton();
 });
 
@@ -130,9 +131,7 @@ function lookbookCard(l) {
 
   if (hasGallery) {
     return `
-    <article class="lookbook-card is-clickable" role="button" tabindex="0"
-             onclick="openLookbook('${id}')"
-             onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openLookbook('${id}');}">
+    <a class="lookbook-card is-clickable" href="lookbook.html?id=${encodeURIComponent(id)}">
       <div class="lookbook-cover">${cover}
         <div class="lookbook-cover__overlay">
           <span class="lookbook-cover__view"><i class="fas fa-images"></i> View lookbook</span>
@@ -142,7 +141,7 @@ function lookbookCard(l) {
         <h3 class="lookbook-title">${title}</h3>
         <span class="lookbook-count">${photos.length} photo${photos.length > 1 ? 's' : ''}</span>
       </div>
-    </article>`;
+    </a>`;
   }
 
   // No photos → cover-only, NOT clickable.
@@ -156,25 +155,55 @@ function lookbookCard(l) {
     </article>`;
 }
 
-function openLookbook(id) {
-  const l = lookbookCache.find(x => String(x.id) === String(id));
-  if (!l) return;
+// ---- Dedicated lookbook page (lookbook.html?id=…) ----
+async function renderLookbookPage() {
+  const root = document.getElementById('lookbookPage');
+  if (!root) return; // only runs on lookbook.html
+
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('id');
+
+  const stateEl = document.getElementById('lbPageState');
+  const notFound = (msg) => {
+    root.innerHTML = `
+      <div class="lb-page__empty">
+        <i class="fas fa-camera-retro"></i>
+        <h1>${escapeHtml(msg)}</h1>
+        <a href="index.html#lookbook" class="btn btn-primary">Back to lookbooks</a>
+      </div>`;
+  };
+
+  if (!id) { notFound('Lookbook not found'); return; }
+
+  const l = await getLookbook(id);
+  if (!l) { notFound('This lookbook is no longer available'); return; }
+
   const photos = Array.isArray(l.photos) ? l.photos : [];
-  if (!photos.length) return; // safety: cover-only lookbooks aren't openable
+  const title = l.title || 'Lookbook';
+  document.title = `${title} — Bling Bling Baku`;
 
-  document.getElementById('lookbookModalTitle').textContent = l.title || 'Lookbook';
-  document.getElementById('lookbookModalCount').textContent =
-    `${photos.length} photo${photos.length > 1 ? 's' : ''}`;
-  document.getElementById('lookbookModalGrid').innerHTML = photos.map((src, i) => `
-    <figure class="lb-photo">
-      <img src="${escapeHtml(src)}" alt="${escapeHtml(l.title || 'Lookbook')} — photo ${i + 1}" loading="lazy" />
-    </figure>`).join('');
+  const gallery = photos.length
+    ? `<div class="lb-page__gallery">${photos.map((src, i) => `
+        <figure class="lb-page__shot">
+          <img src="${escapeHtml(src)}" alt="${escapeHtml(title)} — photo ${i + 1}" loading="lazy" />
+        </figure>`).join('')}</div>`
+    : `<div class="lb-page__gallery-empty"><p>Photos coming soon.</p></div>`;
 
-  document.getElementById('lookbookOverlay').classList.add('open');
-  document.getElementById('lookbookModal').classList.add('open');
-  document.body.style.overflow = 'hidden';
+  root.innerHTML = `
+    <header class="lb-page__hero">
+      <a href="index.html#lookbook" class="lb-page__back"><i class="fas fa-arrow-left"></i> All lookbooks</a>
+      <span class="section-eyebrow">Lookbook</span>
+      <h1 class="lb-page__title">${escapeHtml(title)}</h1>
+      ${photos.length ? `<span class="lb-page__count">${photos.length} photo${photos.length > 1 ? 's' : ''}</span>` : ''}
+    </header>
+    ${gallery}
+    <div class="lb-page__footer-cta">
+      <a href="index.html#lookbook" class="btn btn-outline">Back to all lookbooks</a>
+    </div>`;
+  void stateEl;
 }
 
+// Kept as a no-op-safe closer (Escape handler / legacy callers).
 function closeLookbook() {
   const overlay = document.getElementById('lookbookOverlay');
   const modal = document.getElementById('lookbookModal');
