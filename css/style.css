@@ -1,4 +1,4 @@
-/* =========================================
+v/* =========================================
    BLING BLING BAKU — Boutique luxury (white + rose)
    ========================================= */
 
@@ -468,11 +468,42 @@
     margin-bottom: 1.5rem;
   }
 
-  .hero__cta {
-    font-family: 'Bebas Neue', var(--font-body), sans-serif;
-    letter-spacing: 0.12em;
-    font-size: 1rem;
+  /* The flowing script word inside the hero headline ("Signature") */
+  .hero__script {
+    font-family: 'Blosta', 'Great Vibes', cursive;
+    text-transform: none;
+    font-style: normal;
+    font-weight: 400;
+    font-size: 1.35em;
+    line-height: 0.8;
+    letter-spacing: 0;
+    color: var(--pink-deep);
+    padding: 0 0.08em;
   }
+
+  .hero__cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-body);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--white);
+    background: var(--pink);
+    padding: 0.9rem 1.85rem;
+    min-height: 46px;
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-sm);
+    transition: background var(--transition), box-shadow var(--transition), transform 0.2s var(--ease-out);
+  }
+  .hero__cta:hover {
+    background: var(--pink-deep);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+  }
+  .hero__cta:active { transform: translateY(0); }
 
   /* PAGE HERO SMALL */
   .page-hero.small {
